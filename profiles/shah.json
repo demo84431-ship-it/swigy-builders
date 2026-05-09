@@ -1,0 +1,129 @@
+{
+  "id": "shah",
+  "name": "Mr. Shah",
+  "age": 68,
+  "city": "Ahmedabad",
+  "origin": "Ahmedabad",
+  "avatar": "🧓",
+  "tagline": "Gujarati Senior Citizen",
+  "user_id": "user_shah_68",
+  "version": "1.0",
+  "data_points": 203,
+  "confidence_score": 0.95,
+  "dietary_identity": {
+    "primary": "jain",
+    "strictness": 0.95,
+    "home_vs_outside": 0.10,
+    "fasting_frequency": 0.40,
+    "halal_required": false,
+    "satvic_preference": 0.70
+  },
+  "regional_identity": {
+    "region": "west_indian",
+    "state": "gujarat",
+    "cuisine_affinity": {
+      "south_indian": 0.10, "north_indian": 0.15, "chinese": 0.02,
+      "italian": 0.0, "continental": 0.0, "street_food": 0.15,
+      "dessert": 0.18, "fast_food": 0.0, "healthy": 0.20, "other": 0.20
+    },
+    "rice_vs_wheat": 0.30,
+    "spice_tolerance": 0.30,
+    "sweetness_preference": 0.65
+  },
+  "cuisine_preferences": {
+    "south_indian": 0.10, "north_indian": 0.15, "chinese": 0.02,
+    "italian": 0.0, "continental": 0.0, "street_food": 0.15,
+    "dessert": 0.18, "fast_food": 0.0, "healthy": 0.20, "other": 0.20
+  },
+  "temporal_pattern": {
+    "hour_distribution": [0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.15, 0.20, 0.05, 0.0, 0.0, 0.05, 0.15, 0.05, 0.0, 0.0, 0.05, 0.10, 0.10, 0.05, 0.0, 0.0, 0.0, 0.0],
+    "day_distribution": [0.14, 0.14, 0.14, 0.14, 0.14, 0.16, 0.14],
+    "breakfast_regularity": 0.95,
+    "lunch_regularity": 0.90,
+    "dinner_regularity": 0.85,
+    "late_night_ratio": 0.0,
+    "weekend_ratio": 0.30,
+    "order_interval_days": 4.0,
+    "order_regularity": 0.88
+  },
+  "price_psychology": {
+    "avg_order_value": 350,
+    "aov_std": 100,
+    "price_sensitivity": 0.45,
+    "coupon_usage_rate": 0.30,
+    "deal_seeking": 0.25,
+    "premium_frequency": 0.15,
+    "budget_tier": "moderate",
+    "value_framing": "quality"
+  },
+  "health_orientation": {
+    "health_awareness": 0.80,
+    "calorie_awareness": 0.65,
+    "health_trend": -0.05,
+    "change_stage": "maintenance",
+    "dietary_goal": "diabetic",
+    "medical_restrictions": ["diabetes", "low_sodium", "no_root_vegetables"],
+    "avg_health_score": 0.70,
+    "healthy_order_ratio": 0.60
+  },
+  "social_dynamics": {
+    "solo_ratio": 0.40,
+    "couple_ratio": 0.35,
+    "family_ratio": 0.20,
+    "group_ratio": 0.0,
+    "treat_ratio": 0.05,
+    "avg_party_size": 1.8,
+    "primary_social_context": "couple",
+    "hospitality_frequency": 0.15,
+    "multi_address_ratio": 0.10
+  },
+  "emotional_patterns": {
+    "comfort_foods": ["Khichdi", "Dal Dhokli", "Thepla"],
+    "celebration_foods": ["Mohanthal", "Ghughra", "Shrikhand"],
+    "boredom_foods": ["Khakhra", "Roasted Chana"],
+    "stress_foods": ["Masala Chai", "Murmura Chivda"],
+    "stress_level": 0.15,
+    "celebration_level": 0.05,
+    "boredom_level": 0.10
+  },
+  "life_stage": {
+    "life_stage": "senior_citizen",
+    "confidence": 0.95,
+    "cooking_capability": "usually",
+    "financial_comfort": "comfortable",
+    "health_consciousness": "medical_necessity",
+    "ordering_frequency": 2.0,
+    "variety_seeking": 0.15
+  },
+  "habit_profile": {
+    "overall_habit_strength": 0.85,
+    "reorder_speed": 60.0,
+    "restaurant_loyalty": 0.80,
+    "item_loyalty": 0.85,
+    "recurring_items": [
+      {"item": "Jain Thali", "orders": 25, "restaurant": "Agashiye", "strength": 0.95},
+      {"item": "Thepla + Dahi", "orders": 18, "restaurant": "Das Khaman", "strength": 0.85},
+      {"item": "Khichdi", "orders": 15, "restaurant": "Home-style Kitchen", "strength": 0.80},
+      {"item": "Mohanthal", "orders": 10, "restaurant": "Mango", "strength": 0.65}
+    ],
+    "recurring_restaurants": [
+      {"name": "Agashiye", "orders": 25, "cuisine": "gujarati", "strength": 0.95},
+      {"name": "Das Khaman", "orders": 18, "cuisine": "gujarati", "strength": 0.85},
+      {"name": "Home-style Kitchen", "orders": 15, "cuisine": "gujarati", "strength": 0.80}
+    ],
+    "temporal_habits": [
+      {"cue": "morning_7am", "strength": 0.95, "routine": "thepla + chai", "reward": "familiar comfort + energy"},
+      {"cue": "evening_6pm", "strength": 0.80, "routine": "khakra + masala chai", "reward": "relaxation ritual"}
+    ],
+    "variety_seeking": 0.15,
+    "new_item_rate": 0.08,
+    "new_restaurant_rate": 0.05
+  },
+  "sample_conversations": [
+    {"user": "Order my usual", "agent": "Your usual Jain Thali from Agashiye? No onion, no garlic, no root vegetables — exactly how you like it."},
+    {"user": "Something for my diabetes", "agent": "Diabetic-friendly picks: Moong Dal Khichdi (low GI), Methi Thepla, or Dal Dhokli — all Jain-compliant."},
+    {"user": "My wife wants something different", "agent": "How about Shrikhand + Puri from Mango? A treat for both of you — Jain-safe dessert."},
+    {"user": "I need something easy to eat", "agent": "Soft options: Khichdi, Dal Dhokli, or Handvo — gentle on digestion, full of flavor."},
+    {"user": "Fasting tomorrow", "agent": "I'll set a reminder. For today: Rajgira Chikki + Sabudana Khichdi — fasting-friendly Jain options."}
+  ]
+}

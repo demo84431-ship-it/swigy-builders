@@ -1,0 +1,128 @@
+{
+  "id": "riya",
+  "name": "Riya",
+  "age": 21,
+  "city": "Kolkata",
+  "origin": "Kolkata",
+  "avatar": "🎓",
+  "tagline": "Bengali College Student",
+  "user_id": "user_riya_21",
+  "version": "1.0",
+  "data_points": 89,
+  "confidence_score": 0.78,
+  "dietary_identity": {
+    "primary": "eggetarian",
+    "strictness": 0.60,
+    "home_vs_outside": 0.50,
+    "fasting_frequency": 0.05,
+    "halal_required": false,
+    "satvic_preference": 0.0
+  },
+  "regional_identity": {
+    "region": "east_indian",
+    "state": "west_bengal",
+    "cuisine_affinity": {
+      "south_indian": 0.05, "north_indian": 0.15, "chinese": 0.20,
+      "italian": 0.05, "continental": 0.02, "street_food": 0.25,
+      "dessert": 0.12, "fast_food": 0.10, "healthy": 0.03, "other": 0.03
+    },
+    "rice_vs_wheat": 0.75,
+    "spice_tolerance": 0.65,
+    "sweetness_preference": 0.60
+  },
+  "cuisine_preferences": {
+    "south_indian": 0.05, "north_indian": 0.15, "chinese": 0.20,
+    "italian": 0.05, "continental": 0.02, "street_food": 0.25,
+    "dessert": 0.12, "fast_food": 0.10, "healthy": 0.03, "other": 0.03
+  },
+  "temporal_pattern": {
+    "hour_distribution": [0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.02, 0.05, 0.08, 0.05, 0.08, 0.15, 0.08, 0.03, 0.02, 0.03, 0.05, 0.08, 0.10, 0.12, 0.15, 0.12, 0.08],
+    "day_distribution": [0.10, 0.12, 0.14, 0.12, 0.18, 0.20, 0.14],
+    "breakfast_regularity": 0.15,
+    "lunch_regularity": 0.45,
+    "dinner_regularity": 0.60,
+    "late_night_ratio": 0.28,
+    "weekend_ratio": 0.38,
+    "order_interval_days": 1.5,
+    "order_regularity": 0.35
+  },
+  "price_psychology": {
+    "avg_order_value": 180,
+    "aov_std": 60,
+    "price_sensitivity": 0.80,
+    "coupon_usage_rate": 0.70,
+    "deal_seeking": 0.75,
+    "premium_frequency": 0.02,
+    "budget_tier": "budget",
+    "value_framing": "savings"
+  },
+  "health_orientation": {
+    "health_awareness": 0.25,
+    "calorie_awareness": 0.15,
+    "health_trend": -0.10,
+    "change_stage": "pre_contemplation",
+    "dietary_goal": "none",
+    "medical_restrictions": [],
+    "avg_health_score": 0.35,
+    "healthy_order_ratio": 0.10
+  },
+  "social_dynamics": {
+    "solo_ratio": 0.55,
+    "couple_ratio": 0.10,
+    "family_ratio": 0.05,
+    "group_ratio": 0.30,
+    "treat_ratio": 0.05,
+    "avg_party_size": 2.0,
+    "primary_social_context": "solo",
+    "hospitality_frequency": 0.05,
+    "multi_address_ratio": 0.0
+  },
+  "emotional_patterns": {
+    "comfort_foods": ["Egg Roll", "Maggi", "Fish Fry"],
+    "celebration_foods": ["Biryani", "Chinese Combo", "Brownie"],
+    "boredom_foods": ["Chips", "Momo", "Fuchka"],
+    "stress_foods": ["Ice Cream", "Chocolate Cake", "Cold Coffee"],
+    "stress_level": 0.45,
+    "celebration_level": 0.05,
+    "boredom_level": 0.35
+  },
+  "life_stage": {
+    "life_stage": "college_student",
+    "confidence": 0.85,
+    "cooking_capability": "sometimes",
+    "financial_comfort": "tight",
+    "health_consciousness": "none",
+    "ordering_frequency": 6.0,
+    "variety_seeking": 0.55
+  },
+  "habit_profile": {
+    "overall_habit_strength": 0.30,
+    "reorder_speed": 90.0,
+    "restaurant_loyalty": 0.25,
+    "item_loyalty": 0.35,
+    "recurring_items": [
+      {"item": "Egg Roll", "orders": 14, "restaurant": "Kusum Rolls", "strength": 0.75},
+      {"item": "Chicken Momo", "orders": 10, "restaurant": "Wow! Momo", "strength": 0.60},
+      {"item": "Maggi", "orders": 8, "restaurant": " hostel canteen", "strength": 0.50}
+    ],
+    "recurring_restaurants": [
+      {"name": "Kusum Rolls", "orders": 14, "cuisine": "street_food", "strength": 0.75},
+      {"name": "Wow! Momo", "orders": 10, "cuisine": "chinese", "strength": 0.60},
+      {"name": "Aminia", "orders": 6, "cuisine": "north_indian", "strength": 0.40}
+    ],
+    "temporal_habits": [
+      {"cue": "late_night", "strength": 0.70, "routine": "egg roll or momo", "reward": "study fuel + comfort"},
+      {"cue": "friday_night", "strength": 0.65, "routine": "biryani with friends", "reward": "social bonding"}
+    ],
+    "variety_seeking": 0.55,
+    "new_item_rate": 0.40,
+    "new_restaurant_rate": 0.35
+  },
+  "sample_conversations": [
+    {"user": "I'm hungry", "agent": "Late night study session? Your usual egg roll from Kusum Rolls — ₹60, delivered in 15 min."},
+    {"user": "Something cheap", "agent": "Budget picks: Maggi (₹40), Egg Roll (₹60), or Momo combo (₹80). All under ₹100!"},
+    {"user": "It's Friday night", "agent": "Friday vibes! Biryani with the group? Aminia's doing a student deal — ₹150 each."},
+    {"user": "I'm stressed about exams", "agent": "Study fuel incoming! Egg Roll + Cold Coffee combo — comfort for the grind. Want me to order?"},
+    {"user": "Something sweet", "agent": "Brownie from Cafe Coffee Day (₹99) or Rosogolla from KC Das (₹50)? Both will fix that craving!"}
+  ]
+}

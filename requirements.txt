@@ -1,0 +1,24 @@
+# FoodDNA Agent — Dependencies
+#
+# Install: pip install -r requirements.txt
+
+# ── MCP & Swiggy Integration ──────────────────────────────────────────────
+mcp>=1.0.0
+httpx>=0.27.0
+
+# ── Data Validation ───────────────────────────────────────────────────────
+pydantic>=2.0.0
+
+# ── Date/Time ─────────────────────────────────────────────────────────────
+python-dateutil>=2.9.0
+
+# ── Web Server (Railway deployment) ───────────────────────────────────────
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# ── Optional: Time Series Forecasting ─────────────────────────────────────
+# darts>=0.30.0
+
+# ── Optional: Data Analysis ───────────────────────────────────────────────
+# pandas>=2.0.0
+# numpy>=1.24.0

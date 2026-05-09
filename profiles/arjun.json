@@ -1,0 +1,129 @@
+{
+  "id": "arjun",
+  "name": "Arjun",
+  "age": 28,
+  "city": "Bengaluru",
+  "origin": "Chennai",
+  "avatar": "🧑‍💻",
+  "tagline": "South Indian IT Professional",
+  "user_id": "user_arjun_28",
+  "version": "1.0",
+  "data_points": 67,
+  "confidence_score": 0.82,
+  "dietary_identity": {
+    "primary": "vegetarian",
+    "strictness": 0.85,
+    "home_vs_outside": 0.30,
+    "fasting_frequency": 0.15,
+    "halal_required": false,
+    "satvic_preference": 0.20
+  },
+  "regional_identity": {
+    "region": "south_indian",
+    "state": "tamil_nadu",
+    "cuisine_affinity": {
+      "south_indian": 0.50, "north_indian": 0.18, "chinese": 0.15,
+      "italian": 0.08, "continental": 0.0, "street_food": 0.05,
+      "dessert": 0.0, "fast_food": 0.02, "healthy": 0.04, "other": 0.0
+    },
+    "rice_vs_wheat": 0.85,
+    "spice_tolerance": 0.70,
+    "sweetness_preference": 0.30
+  },
+  "cuisine_preferences": {
+    "south_indian": 0.50, "north_indian": 0.18, "chinese": 0.15,
+    "italian": 0.08, "continental": 0.0, "street_food": 0.05,
+    "dessert": 0.0, "fast_food": 0.02, "healthy": 0.04, "other": 0.0
+  },
+  "temporal_pattern": {
+    "hour_distribution": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.02, 0.08, 0.18, 0.05, 0.02, 0.03, 0.12, 0.15, 0.03, 0.02, 0.02, 0.03, 0.05, 0.08, 0.10, 0.12, 0.05, 0.02],
+    "day_distribution": [0.12, 0.13, 0.14, 0.13, 0.22, 0.16, 0.10],
+    "breakfast_regularity": 0.80,
+    "lunch_regularity": 0.65,
+    "dinner_regularity": 0.55,
+    "late_night_ratio": 0.12,
+    "weekend_ratio": 0.35,
+    "order_interval_days": 1.8,
+    "order_regularity": 0.72
+  },
+  "price_psychology": {
+    "avg_order_value": 280,
+    "aov_std": 85,
+    "price_sensitivity": 0.55,
+    "coupon_usage_rate": 0.40,
+    "deal_seeking": 0.45,
+    "premium_frequency": 0.10,
+    "budget_tier": "moderate",
+    "value_framing": "quality"
+  },
+  "health_orientation": {
+    "health_awareness": 0.45,
+    "calorie_awareness": 0.30,
+    "health_trend": 0.10,
+    "change_stage": "contemplation",
+    "dietary_goal": "general_wellness",
+    "medical_restrictions": [],
+    "avg_health_score": 0.50,
+    "healthy_order_ratio": 0.25
+  },
+  "social_dynamics": {
+    "solo_ratio": 0.70,
+    "couple_ratio": 0.15,
+    "family_ratio": 0.10,
+    "group_ratio": 0.05,
+    "treat_ratio": 0.05,
+    "avg_party_size": 1.2,
+    "primary_social_context": "solo",
+    "hospitality_frequency": 0.10,
+    "multi_address_ratio": 0.05
+  },
+  "emotional_patterns": {
+    "comfort_foods": ["Curd Rice", "Sambar Rice", "Dal Rice"],
+    "celebration_foods": ["Biryani", "Pizza"],
+    "boredom_foods": ["Maggi", "Chips"],
+    "stress_foods": ["Ice Cream", "Chocolate"],
+    "stress_level": 0.25,
+    "celebration_level": 0.0,
+    "boredom_level": 0.10
+  },
+  "life_stage": {
+    "life_stage": "young_professional_alone",
+    "confidence": 0.80,
+    "cooking_capability": "none",
+    "financial_comfort": "comfortable",
+    "health_consciousness": "somewhat",
+    "ordering_frequency": 5.5,
+    "variety_seeking": 0.30
+  },
+  "habit_profile": {
+    "overall_habit_strength": 0.72,
+    "reorder_speed": 45.0,
+    "restaurant_loyalty": 0.65,
+    "item_loyalty": 0.70,
+    "recurring_items": [
+      {"item": "Masala Dosa", "orders": 12, "restaurant": "Saravana Bhavan", "strength": 0.85},
+      {"item": "Filter Coffee", "orders": 18, "restaurant": "Saravana Bhavan", "strength": 0.90},
+      {"item": "Biryani", "orders": 8, "restaurant": "Meghana Foods", "strength": 0.70},
+      {"item": "Curd Rice", "orders": 6, "restaurant": "Saravana Bhavan", "strength": 0.60}
+    ],
+    "recurring_restaurants": [
+      {"name": "Saravana Bhavan", "orders": 18, "cuisine": "south_indian", "strength": 0.90},
+      {"name": "Meghana Foods", "orders": 8, "cuisine": "north_indian", "strength": 0.70},
+      {"name": "Chaat Street", "orders": 5, "cuisine": "street_food", "strength": 0.45}
+    ],
+    "temporal_habits": [
+      {"cue": "friday", "strength": 0.80, "routine": "biryani", "reward": "weekend celebration"},
+      {"cue": "morning", "strength": 0.85, "routine": "masala dosa", "reward": "familiar comfort + energy"}
+    ],
+    "variety_seeking": 0.30,
+    "new_item_rate": 0.20,
+    "new_restaurant_rate": 0.15
+  },
+  "sample_conversations": [
+    {"user": "Order my usual", "agent": "Your usual masala dosa from Saravana Bhavan? 12 orders this month — you love this!"},
+    {"user": "It's Friday", "agent": "Friday vibes! Your usual biryani from Meghana Foods? 4 consecutive Fridays!"},
+    {"user": "Plan my evening", "agent": "Dinner out at Barbeque Nation at 7:30? Or order in from Meghana Foods?"},
+    {"user": "Something healthy", "agent": "How about a grilled paneer salad or multigrain dosa? Light but satisfying."},
+    {"user": "Surprise me", "agent": "Try something different — Appam & Stew? Same South Indian comfort, new twist."}
+  ]
+}

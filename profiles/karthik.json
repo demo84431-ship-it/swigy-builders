@@ -1,0 +1,128 @@
+{
+  "id": "karthik",
+  "name": "Karthik",
+  "age": 32,
+  "city": "San Francisco",
+  "origin": "Chennai",
+  "avatar": "✈️",
+  "tagline": "NRI Ordering for Parents",
+  "user_id": "user_karthik_32",
+  "version": "1.0",
+  "data_points": 45,
+  "confidence_score": 0.68,
+  "dietary_identity": {
+    "primary": "vegetarian",
+    "strictness": 0.90,
+    "home_vs_outside": 0.05,
+    "fasting_frequency": 0.20,
+    "halal_required": false,
+    "satvic_preference": 0.35
+  },
+  "regional_identity": {
+    "region": "south_indian",
+    "state": "tamil_nadu",
+    "cuisine_affinity": {
+      "south_indian": 0.45, "north_indian": 0.20, "chinese": 0.08,
+      "italian": 0.05, "continental": 0.02, "street_food": 0.05,
+      "dessert": 0.08, "fast_food": 0.02, "healthy": 0.05, "other": 0.0
+    },
+    "rice_vs_wheat": 0.80,
+    "spice_tolerance": 0.60,
+    "sweetness_preference": 0.40
+  },
+  "cuisine_preferences": {
+    "south_indian": 0.45, "north_indian": 0.20, "chinese": 0.08,
+    "italian": 0.05, "continental": 0.02, "street_food": 0.05,
+    "dessert": 0.08, "fast_food": 0.02, "healthy": 0.05, "other": 0.0
+  },
+  "temporal_pattern": {
+    "hour_distribution": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.08, 0.12, 0.15, 0.10, 0.08, 0.05, 0.02, 0.0, 0.0],
+    "day_distribution": [0.10, 0.10, 0.12, 0.10, 0.15, 0.22, 0.21],
+    "breakfast_regularity": 0.0,
+    "lunch_regularity": 0.0,
+    "dinner_regularity": 0.0,
+    "late_night_ratio": 0.0,
+    "weekend_ratio": 0.43,
+    "order_interval_days": 7.0,
+    "order_regularity": 0.40
+  },
+  "price_psychology": {
+    "avg_order_value": 450,
+    "aov_std": 150,
+    "price_sensitivity": 0.20,
+    "coupon_usage_rate": 0.15,
+    "deal_seeking": 0.10,
+    "premium_frequency": 0.40,
+    "budget_tier": "comfortable",
+    "value_framing": "quality"
+  },
+  "health_orientation": {
+    "health_awareness": 0.60,
+    "calorie_awareness": 0.45,
+    "health_trend": 0.0,
+    "change_stage": "contemplation",
+    "dietary_goal": "general_wellness",
+    "medical_restrictions": [],
+    "avg_health_score": 0.55,
+    "healthy_order_ratio": 0.30
+  },
+  "social_dynamics": {
+    "solo_ratio": 0.10,
+    "couple_ratio": 0.15,
+    "family_ratio": 0.60,
+    "group_ratio": 0.05,
+    "treat_ratio": 0.15,
+    "avg_party_size": 2.5,
+    "primary_social_context": "family",
+    "hospitality_frequency": 0.20,
+    "multi_address_ratio": 0.80
+  },
+  "emotional_patterns": {
+    "comfort_foods": ["Filter Coffee", "Idli Sambar", "Rasam Rice"],
+    "celebration_foods": ["Payasam", "Mysore Pak", "Biryani"],
+    "boredom_foods": ["Murukku", "Thenkuzhal"],
+    "stress_foods": ["Filter Coffee", "Sundal"],
+    "stress_level": 0.20,
+    "celebration_level": 0.10,
+    "boredom_level": 0.05
+  },
+  "life_stage": {
+    "life_stage": "nri_remote_ordering",
+    "confidence": 0.90,
+    "cooking_capability": "sometimes",
+    "financial_comfort": "premium",
+    "health_consciousness": "somewhat",
+    "ordering_frequency": 1.5,
+    "variety_seeking": 0.25
+  },
+  "habit_profile": {
+    "overall_habit_strength": 0.60,
+    "reorder_speed": 120.0,
+    "restaurant_loyalty": 0.70,
+    "item_loyalty": 0.65,
+    "recurring_items": [
+      {"item": "South Indian Thali", "orders": 12, "restaurant": "Saravana Bhavan", "strength": 0.80},
+      {"item": "Filter Coffee", "orders": 15, "restaurant": "Saravana Bhavan", "strength": 0.85},
+      {"item": "Idli Sambar", "orders": 10, "restaurant": "Murugan Idli Shop", "strength": 0.70}
+    ],
+    "recurring_restaurants": [
+      {"name": "Saravana Bhavan", "orders": 18, "cuisine": "south_indian", "strength": 0.85},
+      {"name": "Murugan Idli Shop", "orders": 10, "cuisine": "south_indian", "strength": 0.70},
+      {"name": "Grand Sweets", "orders": 8, "cuisine": "south_indian", "strength": 0.55}
+    ],
+    "temporal_habits": [
+      {"cue": "weekend_morning", "strength": 0.75, "routine": "order breakfast for parents", "reward": "care + connection"},
+      {"cue": "festival", "strength": 0.90, "routine": "order sweets for parents", "reward": "cultural continuity"}
+    ],
+    "variety_seeking": 0.25,
+    "new_item_rate": 0.15,
+    "new_restaurant_rate": 0.10
+  },
+  "sample_conversations": [
+    {"user": "Order for my parents", "agent": "South Indian Thali from Saravana Bhavan for Amma & Appa? Delivered to T. Nagar, Chennai by 12:30 PM IST."},
+    {"user": "It's their anniversary", "agent": "Special day! How about a Grand Sweets combo — Mysore Pak + Payasam + Filter Coffee? ₹450, gift-wrapped."},
+    {"user": "Something healthy for Amma", "agent": "Low-oil options: Idli Sambar (soft, light), Ragi Dosa, or Millet Idli — all Amma-friendly, ₹120-180."},
+    {"user": "What time is it in Chennai?", "agent": "It's 7:30 AM in Chennai — perfect time to order breakfast! Idli + Filter Coffee from Murugan Idli Shop?"},
+    {"user": "Diwali sweets", "agent": "Diwali delivery to Chennai! Mysore Pak from Grand Sweets + Ladoo from Sri Krishna Sweets — ₹600, delivered by Diwali morning."}
+  ]
+}

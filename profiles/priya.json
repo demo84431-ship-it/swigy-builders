@@ -1,0 +1,129 @@
+{
+  "id": "priya",
+  "name": "Priya",
+  "age": 45,
+  "city": "Delhi",
+  "origin": "Delhi",
+  "avatar": "👩‍👧‍👦",
+  "tagline": "North Indian Joint Family",
+  "user_id": "user_priya_45",
+  "version": "1.0",
+  "data_points": 142,
+  "confidence_score": 0.91,
+  "dietary_identity": {
+    "primary": "non_vegetarian",
+    "strictness": 0.40,
+    "home_vs_outside": 0.60,
+    "fasting_frequency": 0.25,
+    "halal_required": false,
+    "satvic_preference": 0.10
+  },
+  "regional_identity": {
+    "region": "north_indian",
+    "state": "delhi",
+    "cuisine_affinity": {
+      "south_indian": 0.08, "north_indian": 0.45, "chinese": 0.12,
+      "italian": 0.05, "continental": 0.03, "street_food": 0.15,
+      "dessert": 0.05, "fast_food": 0.04, "healthy": 0.03, "other": 0.0
+    },
+    "rice_vs_wheat": 0.25,
+    "spice_tolerance": 0.80,
+    "sweetness_preference": 0.50
+  },
+  "cuisine_preferences": {
+    "south_indian": 0.08, "north_indian": 0.45, "chinese": 0.12,
+    "italian": 0.05, "continental": 0.03, "street_food": 0.15,
+    "dessert": 0.05, "fast_food": 0.04, "healthy": 0.03, "other": 0.0
+  },
+  "temporal_pattern": {
+    "hour_distribution": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.03, 0.10, 0.08, 0.02, 0.02, 0.05, 0.20, 0.08, 0.02, 0.02, 0.03, 0.05, 0.10, 0.12, 0.08, 0.03, 0.0, 0.0],
+    "day_distribution": [0.15, 0.12, 0.13, 0.12, 0.14, 0.18, 0.16],
+    "breakfast_regularity": 0.70,
+    "lunch_regularity": 0.85,
+    "dinner_regularity": 0.75,
+    "late_night_ratio": 0.03,
+    "weekend_ratio": 0.34,
+    "order_interval_days": 2.5,
+    "order_regularity": 0.68
+  },
+  "price_psychology": {
+    "avg_order_value": 650,
+    "aov_std": 200,
+    "price_sensitivity": 0.35,
+    "coupon_usage_rate": 0.25,
+    "deal_seeking": 0.30,
+    "premium_frequency": 0.25,
+    "budget_tier": "comfortable",
+    "value_framing": "quality"
+  },
+  "health_orientation": {
+    "health_awareness": 0.55,
+    "calorie_awareness": 0.40,
+    "health_trend": 0.05,
+    "change_stage": "contemplation",
+    "dietary_goal": "general_wellness",
+    "medical_restrictions": [],
+    "avg_health_score": 0.45,
+    "healthy_order_ratio": 0.20
+  },
+  "social_dynamics": {
+    "solo_ratio": 0.05,
+    "couple_ratio": 0.10,
+    "family_ratio": 0.65,
+    "group_ratio": 0.15,
+    "treat_ratio": 0.10,
+    "avg_party_size": 4.2,
+    "primary_social_context": "family",
+    "hospitality_frequency": 0.35,
+    "multi_address_ratio": 0.20
+  },
+  "emotional_patterns": {
+    "comfort_foods": ["Rajma Chawal", "Kadhi Chawal", "Aloo Paratha"],
+    "celebration_foods": ["Butter Chicken", "Biryani", "Gulab Jamun"],
+    "boredom_foods": ["Samosa", "Chole Bhature"],
+    "stress_foods": ["Chai + Pakora", "Kheer"],
+    "stress_level": 0.30,
+    "celebration_level": 0.10,
+    "boredom_level": 0.05
+  },
+  "life_stage": {
+    "life_stage": "joint_family",
+    "confidence": 0.90,
+    "cooking_capability": "usually",
+    "financial_comfort": "comfortable",
+    "health_consciousness": "somewhat",
+    "ordering_frequency": 3.5,
+    "variety_seeking": 0.40
+  },
+  "habit_profile": {
+    "overall_habit_strength": 0.55,
+    "reorder_speed": 180.0,
+    "restaurant_loyalty": 0.45,
+    "item_loyalty": 0.50,
+    "recurring_items": [
+      {"item": "Butter Chicken", "orders": 15, "restaurant": "Moti Mahal", "strength": 0.80},
+      {"item": "Dal Makhani", "orders": 12, "restaurant": "Moti Mahal", "strength": 0.75},
+      {"item": "Paneer Tikka", "orders": 10, "restaurant": "Haldiram's", "strength": 0.65},
+      {"item": "Gulab Jamun", "orders": 8, "restaurant": "Bengali Sweet House", "strength": 0.55}
+    ],
+    "recurring_restaurants": [
+      {"name": "Moti Mahal", "orders": 20, "cuisine": "north_indian", "strength": 0.85},
+      {"name": "Haldiram's", "orders": 15, "cuisine": "north_indian", "strength": 0.70},
+      {"name": "Bengali Sweet House", "orders": 10, "cuisine": "dessert", "strength": 0.55}
+    ],
+    "temporal_habits": [
+      {"cue": "sunday", "strength": 0.75, "routine": "family lunch order", "reward": "family togetherness"},
+      {"cue": "evening", "strength": 0.60, "routine": "chai + snack", "reward": "relaxation"}
+    ],
+    "variety_seeking": 0.40,
+    "new_item_rate": 0.25,
+    "new_restaurant_rate": 0.20
+  },
+  "sample_conversations": [
+    {"user": "Order for the family", "agent": "Butter Chicken + Dal Makhani from Moti Mahal? The usual Sunday spread for 4?"},
+    {"user": "Something the kids will eat", "agent": "Paneer Tikka + Naan — always a hit with the kids. Want me to add Gulab Jamun for dessert?"},
+    {"user": "We have guests tonight", "agent": "Biryani + Raita + Kebab platter from Moti Mahal? Enough for 6 people, ₹1,800."},
+    {"user": "Something light tonight", "agent": "How about Dal Soup + Grilled Paneer? Light but satisfying for the family."},
+    {"user": "It's Sunday", "agent": "Sunday family lunch! Your usual order from Moti Mahal — Butter Chicken, Dal Makhani, Naan?"}
+  ]
+}

@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodDNA Agent — Psychology-First Food Intelligence</title>
+  <meta name="description" content="FoodDNA builds behavioral profiles from Swiggy signals — cultural identity, emotional patterns, habit loops, life stage. Not just what you like — but why you eat it.">
+  <meta property="og:title" content="FoodDNA Agent — Psychology-First Food Intelligence">
+  <meta property="og:description" content="The AI that understands why you eat what you eat. Built for Swiggy Builders Club.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       DESIGN TOKENS (from DESIGN.md)
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --canvas: #FAF8F5;
+      --ink: #1A1714;
+      --accent: #C4654A;
+      --accent-hover: #A8503A;
+      --accent-light: #E8A898;
+      --surface: #FFFFFF;
+      --surface-warm: #F5F2EE;
+      --surface-hover: #EDE9E3;
+      --border: #E8E4DF;
+      --border-subtle: #F0EDE8;
+      --text-1: #1A1714;
+      --text-2: #6B6560;
+      --text-3: #9B9590;
+      --text-on-accent: #FFFFFF;
+      --success: #2D8A56;
+      --warning: #D4880F;
+      --error: #C44040;
+      --info: #4A7FB5;
+      --dim-dietary: #2D8A56;
+      --dim-regional: #C4654A;
+      --dim-temporal: #4A7FB5;
+      --dim-emotional: #D4880F;
+      --dim-habit: #7B61A8;
+      --shadow-hover: 0 2px 8px rgba(26,23,20,0.06);
+      --shadow-elevated: 0 4px 16px rgba(26,23,20,0.08);
+      --radius: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-pill: 9999px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESET + BASE
+       ═══════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--canvas);
+      color: var(--text-1);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; line-height: 1.15; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img { max-width: 100%; display: block; }
+
+    .mono { font-family: 'JetBrains Mono', 'SF Mono', monospace; font-variant-numeric: tabular-nums; }
+    .kicker {
+      font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LAYOUT
+       ═══════════════════════════════════════════════════════════════ */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    section { padding: 96px 0; }
+    .section-title { font-size: 32px; margin-bottom: 16px; }
+    .section-subtitle { font-size: 18px; color: var(--text-2); max-width: 600px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════════════════ */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .header-logo {
+      font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700;
+      color: var(--ink); display: flex; align-items: center; gap: 8px;
+    }
+    .header-logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+    .header-nav { display: flex; align-items: center; gap: 32px; }
+    .header-nav a { font-size: 14px; font-weight: 500; color: var(--text-2); transition: color 0.2s; }
+    .header-nav a:hover { color: var(--ink); text-decoration: none; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .btn-theme {
+      background: none; border: 1px solid var(--border); color: var(--text-2);
+      width: 36px; height: 36px; border-radius: var(--radius); cursor: pointer;
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-theme:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       BUTTONS
+       ═══════════════════════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 12px 24px; border-radius: var(--radius); font-size: 15px;
+      font-weight: 600; font-family: inherit; cursor: pointer;
+      transition: all 0.2s; border: none; gap: 8px;
+    }
+    .btn-primary { background: var(--accent); color: var(--text-on-accent); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: transparent; color: var(--text-1);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-ghost { background: none; color: var(--accent); padding: 12px 16px; }
+    .btn-ghost:hover { text-decoration: underline; }
+    .btn-pill { border-radius: var(--radius-pill); padding: 8px 20px; font-size: 14px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SECTION 2: HERO
+       ═══════════════════════════════════════════════════════════════ */
+    .hero {
+      min-height: 80vh; display: flex; align-items: center;
+      padding: 96px 0 64px;
+    }
+    .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+    .hero-kicker { margin-bottom: 16px; }
+    .hero h1 { font-size: 48px; margin-bottom: 20px; color: var(--ink); }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero-subtitle { font-size: 18px; color: var(--text-2); line-height: 1.65; margin-bottom: 32px; max-width: 520px; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex; gap: 32px; margin-top: 48px; padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    .hero-stat { text-align: left; }
+    .hero-stat .num { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .hero-stat .label { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+
+    /* DNA Helix Visual */
+    .dna-visual {
+      display: flex; align-items: center; justify-content: center;
+      position: relative; height: 400px;
+    }
+    .dna-strand {
+      display: flex; flex-direction: column; gap: 12px;
+      animation: dnaFloat 6s ease-in-out infinite;
+    }
+    .dna-node {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 18px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius-pill);
+      font-size: 14px; font-weight: 500; color: var(--text-2);
+      transition: all 0.3s;
+    }
+    .dna-node:hover { border-color: var(--accent); color: var(--accent); transform: translateX(4px); }
+    .dna-node .dot-sm { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dna-node:nth-child(odd) { align-self: flex-start; }
+    .dna-node:nth-child(even) { align-self: flex-end; }
+
+    @keyframes dnaFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SECTION 3: HOW IT WORKS
+       ═══════════════════════════════════════════════════════════════ */
+    .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+    .how-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 32px;
+      transition: all 0.25s;
+    }
+    .how-card:hover { border-color: var(--accent); box-shadow: var(--shadow-hover); }
+    .how-num {
+      font-family: 'JetBrains Mono', monospace; font-size: 48px; font-weight: 500;
+      color: var(--accent-light); margin-bottom: 16px; font-variant-numeric: tabular-nums;
+    }
+    .how-card h3 { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 600; margin-bottom: 12px; }
+    .how-card p { font-size: 15px; color: var(--text-2); line-height: 1.6; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SECTION 4: LIVE DEMO
+       ═══════════════════════════════════════════════════════════════ */
+    .demo-section { background: var(--surface-warm); padding: 96px 0; }
+    .demo-header { text-align: center; margin-bottom: 48px; }
+    .demo-header .section-title { margin-bottom: 8px; }
+
+    .demo-layout { display: grid; grid-template-columns: 1fr 380px; gap: 24px; min-height: 640px; }
+
+    /* Chat Panel */
+    .chat-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-topbar {
+      display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+      border-bottom: 1px solid var(--border); overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .profile-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: var(--radius-pill);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-2); white-space: nowrap; transition: all 0.2s;
+    }
+    .profile-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .profile-pill.active {
+      border-color: var(--accent); background: var(--accent);
+      color: var(--text-on-accent);
+    }
+    .profile-pill .pill-emoji { font-size: 16px; }
+
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 24px;
+      display: flex; flex-direction: column; gap: 16px;
+      min-height: 400px; max-height: 500px;
+    }
+    .msg {
+      max-width: 85%; padding: 14px 18px; border-radius: 16px;
+      font-size: 15px; line-height: 1.6; animation: msgIn 0.3s ease;
+    }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .msg-user {
+      align-self: flex-end; background: var(--accent); color: var(--text-on-accent);
+      border-bottom-right-radius: 4px;
+    }
+    .msg-agent {
+      align-self: flex-start; background: var(--surface); border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .msg-system {
+      align-self: center; background: none; color: var(--text-3);
+      font-size: 13px; text-align: center; padding: 8px;
+    }
+    .msg-agent strong { color: var(--accent); }
+    .msg-agent em { color: var(--text-2); font-style: normal; }
+
+    /* Rich Cards */
+    .rich-card { margin-top: 8px; }
+    .rich-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .rich-card-emoji {
+      font-size: 32px; width: 48px; height: 48px; display: flex;
+      align-items: center; justify-content: center; background: var(--surface-warm);
+      border-radius: var(--radius-lg); flex-shrink: 0;
+    }
+    /* Alias: app.py uses rich-card-img, rich-card-info */
+    .rich-card-img {
+      font-size: 32px; width: 48px; height: 48px; display: flex;
+      align-items: center; justify-content: center; background: var(--surface-warm);
+      border-radius: var(--radius-lg); flex-shrink: 0;
+    }
+    .rich-card-info { flex: 1; }
+    .rich-card.festival { border-color: var(--warning); }
+    .rich-card-title { font-size: 16px; font-weight: 600; }
+    .rich-card-subtitle { font-size: 13px; color: var(--text-2); }
+    .rich-card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .meta-chip {
+      background: var(--surface-warm); padding: 4px 10px;
+      border-radius: var(--radius); font-size: 12px; color: var(--text-2);
+    }
+    .rich-card-desc { font-size: 14px; color: var(--text-2); margin-bottom: 12px; }
+    .rich-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .action-btn {
+      background: var(--surface-warm); border: 1px solid var(--border);
+      color: var(--text-1); padding: 8px 16px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .action-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--text-on-accent); }
+    .action-btn.primary:hover { background: var(--accent-hover); }
+
+    .option-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+    /* Alias: app.py uses rich-card-options */
+    .rich-card-options { display: flex; gap: 10px; flex-wrap: wrap; }
+    .option-card {
+      flex: 1; min-width: 140px; background: var(--surface-warm);
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 12px; text-align: center;
+    }
+    .option-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .option-detail { font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
+
+    .typing { display: flex; gap: 4px; padding: 14px 18px; align-self: flex-start; }
+    .typing span {
+      width: 8px; height: 8px; background: var(--text-3); border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out;
+    }
+    .typing span:nth-child(1) { animation-delay: -0.32s; }
+    .typing span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+    /* Suggestions */
+    .chat-input-area {
+      padding: 16px; border-top: 1px solid var(--border); background: var(--surface);
+    }
+    .suggestions { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .suggestion {
+      background: var(--surface-warm); border: 1px solid var(--border);
+      color: var(--text-2); padding: 6px 14px; border-radius: var(--radius-pill);
+      font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .suggestion:hover { border-color: var(--accent); color: var(--accent); }
+    .input-row { display: flex; gap: 12px; align-items: center; }
+    #chat-input {
+      flex: 1; background: var(--surface-warm); border: 1px solid var(--border);
+      color: var(--text-1); padding: 12px 16px; border-radius: var(--radius-lg);
+      font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.2s;
+    }
+    #chat-input:focus { border-color: var(--accent); }
+    #chat-input::placeholder { color: var(--text-3); }
+    #send-btn {
+      background: var(--accent); border: none; color: var(--text-on-accent);
+      width: 44px; height: 44px; border-radius: var(--radius-lg); cursor: pointer;
+      font-size: 18px; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    #send-btn:hover { background: var(--accent-hover); }
+
+    /* DNA Sidebar */
+    .dna-sidebar {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 24px; overflow-y: auto;
+    }
+    .dna-profile-header { text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .dna-avatar { font-size: 48px; margin-bottom: 8px; }
+    .dna-name { font-size: 18px; font-weight: 700; }
+    .dna-tagline { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+
+    .dna-dimension { margin-bottom: 16px; }
+    .dna-dim-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--text-3); margin-bottom: 4px;
+      display: flex; align-items: center; gap: 6px; cursor: help;
+    }
+    .dna-dim-label .dim-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .dna-dim-value { font-size: 15px; font-weight: 600; color: var(--text-1); }
+    .dna-dim-bar {
+      height: 6px; background: var(--surface-warm); border-radius: 3px;
+      margin-top: 6px; overflow: hidden;
+    }
+    .dna-dim-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+
+    .dna-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .dna-section-title { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .dna-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+    .dna-item .name { color: var(--text-1); }
+    .dna-item .count { color: var(--text-3); font-size: 12px; }
+
+    .dna-placeholder {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; color: var(--text-3); text-align: center; padding: 48px 24px;
+    }
+    .dna-placeholder .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .dna-placeholder p { font-size: 14px; line-height: 1.6; }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute; background: var(--ink); color: var(--surface);
+      padding: 8px 12px; border-radius: var(--radius); font-size: 12px;
+      line-height: 1.4; max-width: 220px; z-index: 50;
+      pointer-events: none; opacity: 0; transition: opacity 0.2s;
+    }
+    .dna-dim-label:hover .tooltip { opacity: 1; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SECTION 5: PROFILES
+       ═══════════════════════════════════════════════════════════════ */
+    .profiles-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 48px; }
+    .profile-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: 24px; text-align: center;
+      cursor: pointer; transition: all 0.25s;
+    }
+    .profile-card:hover { border-color: var(--accent); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .profile-card .p-avatar { font-size: 40px; margin-bottom: 12px; }
+    .profile-card .p-name { font-size: 17px; font-weight: 700; margin-bottom: 2px; }
+    .profile-card .p-meta { font-size: 13px; color: var(--text-2); margin-bottom: 16px; }
+    .profile-card .p-insights { text-align: left; }
+    .profile-card .p-insight {
+      font-size: 12px; color: var(--text-2); padding: 6px 0;
+      border-top: 1px solid var(--border-subtle); line-height: 1.4;
+    }
+    .profile-card .p-insight:first-child { border-top: none; }
+    .profile-card .p-insight strong { color: var(--text-1); font-weight: 600; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SECTION 6: WHY DIFFERENT
+       ═══════════════════════════════════════════════════════════════ */
+    .why-section { background: var(--surface-warm); padding: 96px 0; }
+    .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; margin-top: 48px; }
+    .why-heading { font-size: 28px; line-height: 1.3; margin-bottom: 16px; }
+    .why-subtitle { font-size: 16px; color: var(--text-2); line-height: 1.6; }
+    .frameworks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .framework-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 20px;
+    }
+    .framework-card h4 { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .framework-card p { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SECTION 7: CTA
+       ═══════════════════════════════════════════════════════════════ */
+    .cta-section { text-align: center; padding: 96px 0; }
+    .cta-section h2 { font-size: 36px; margin-bottom: 12px; }
+    .cta-section .subtitle { font-size: 18px; color: var(--text-2); margin-bottom: 32px; }
+    .cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .cta-stats {
+      display: flex; gap: 48px; justify-content: center; margin-top: 48px;
+      padding-top: 32px; border-top: 1px solid var(--border);
+    }
+    .cta-stat .num { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 500; color: var(--ink); }
+    .cta-stat .label { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SECTION 8: FOOTER
+       ═══════════════════════════════════════════════════════════════ */
+    .footer {
+      padding: 32px 0; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; color: var(--text-3);
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { color: var(--text-2); font-size: 13px; }
+    .footer-links a:hover { color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .dna-visual { display: none; }
+      .demo-layout { grid-template-columns: 1fr; }
+      .dna-sidebar { max-height: 400px; }
+      .profiles-grid { grid-template-columns: repeat(3, 1fr); }
+      .why-grid { grid-template-columns: 1fr; }
+      .how-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      section { padding: 64px 0; }
+      .hero { min-height: auto; padding: 64px 0 48px; }
+      .hero h1 { font-size: 32px; }
+      .hero-stats { gap: 24px; flex-wrap: wrap; }
+      .how-grid { grid-template-columns: 1fr; }
+      .profiles-grid { grid-template-columns: 1fr 1fr; }
+      .frameworks-grid { grid-template-columns: 1fr; }
+      .cta-stats { gap: 24px; flex-wrap: wrap; }
+      .header-nav { display: none; }
+      .footer { flex-direction: column; gap: 12px; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 28px; }
+      .profiles-grid { grid-template-columns: 1fr; }
+      .section-title { font-size: 24px; }
+      .demo-layout { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════ HEADER ═══════════════ -->
+  <header class="header" role="banner">
+    <a href="#" class="header-logo" aria-label="FoodDNA home">
+      <span class="dot" aria-hidden="true"></span> FoodDNA
+    </a>
+    <nav class="header-nav" aria-label="Main navigation">
+      <a href="#how">How it works</a>
+      <a href="#demo">Live Demo</a>
+      <a href="#profiles">Profiles</a>
+      <a href="#why">Research</a>
+    </nav>
+    <div class="header-right">
+      <button class="btn-theme" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle theme">☀️</button>
+      <a href="#demo" class="btn btn-primary btn-pill">Try Demo</a>
+    </div>
+  </header>
+
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <section class="hero" id="hero" aria-label="Hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div>
+          <p class="kicker hero-kicker">Psychology-First Food Intelligence</p>
+          <h1>The AI that understands <em>why</em> you eat what you eat</h1>
+          <p class="hero-subtitle">
+            FoodDNA builds behavioral profiles from Swiggy signals — cultural identity, emotional patterns, habit loops, life stage. Not just "what you like" — but why you eat it, when, and how it connects to who you are.
+          </p>
+          <div class="hero-actions">
+            <a href="#demo" class="btn btn-primary">Try the Live Demo</a>
+            <a href="#why" class="btn btn-secondary">Read the Research</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="num mono">10</div>
+              <div class="label">Dimensions</div>
+            </div>
+            <div class="hero-stat">
+              <div class="num mono">5</div>
+              <div class="label">Profiles</div>
+            </div>
+            <div class="hero-stat">
+              <div class="num mono">3</div>
+              <div class="label">MCP Servers</div>
+            </div>
+            <div class="hero-stat">
+              <div class="num mono">6</div>
+              <div class="label">Frameworks</div>
+            </div>
+          </div>
+        </div>
+        <div class="dna-visual" aria-hidden="true">
+          <div class="dna-strand">
+            <div class="dna-node"><span class="dot-sm" style="background:var(--dim-dietary)"></span> Dietary Identity</div>
+            <div class="dna-node"><span class="dot-sm" style="background:var(--dim-regional)"></span> Regional Culture</div>
+            <div class="dna-node"><span class="dot-sm" style="background:var(--dim-temporal)"></span> Temporal Rhythm</div>
+            <div class="dna-node"><span class="dot-sm" style="background:var(--dim-emotional)"></span> Emotional Patterns</div>
+            <div class="dna-node"><span class="dot-sm" style="background:var(--dim-habit)"></span> Habit Loops</div>
+            <div class="dna-node"><span class="dot-sm" style="background:var(--dim-dietary)"></span> Health Orientation</div>
+            <div class="dna-node"><span class="dot-sm" style="background:var(--dim-regional)"></span> Social Dynamics</div>
+            <div class="dna-node"><span class="dot-sm" style="background:var(--dim-temporal)"></span> Price Psychology</div>
+            <div class="dna-node"><span class="dot-sm" style="background:var(--dim-emotional)"></span> Life Stage</div>
+            <div class="dna-node"><span class="dot-sm" style="background:var(--dim-habit)"></span> Cuisine Preferences</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+  <section id="how" aria-label="How it works">
+    <div class="container">
+      <p class="kicker">How It Works</p>
+      <h2 class="section-title">From signals to psychology</h2>
+      <p class="section-subtitle">Three steps from raw Swiggy data to personalized food intelligence.</p>
+      <div class="how-grid">
+        <div class="how-card">
+          <div class="how-num mono">01</div>
+          <h3>Signal</h3>
+          <p>Swiggy's 3 MCP servers send behavioral signals — food orders, grocery patterns, dining bookings, addresses. Every action reveals something about who you are.</p>
+        </div>
+        <div class="how-card">
+          <div class="how-num mono">02</div>
+          <h3>Analyze</h3>
+          <p>FoodDNA extracts 10 psychological dimensions using behavioral science frameworks — Habit Loop, Stages of Change, Identity Theory, Behavioral Economics.</p>
+        </div>
+        <div class="how-card">
+          <div class="how-num mono">03</div>
+          <h3>Recommend</h3>
+          <p>Personalized suggestions that respect your identity, habits, and emotional state. Never push healthy food on a stressed user. Never override dietary identity.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ LIVE DEMO ═══════════════ -->
+  <section class="demo-section" id="demo" aria-label="Live demo">
+    <div class="container">
+      <div class="demo-header">
+        <p class="kicker">Live Demo</p>
+        <h2 class="section-title">See FoodDNA in action</h2>
+        <p class="section-subtitle" style="margin:0 auto">Select a profile and start a conversation. Watch the Food DNA sidebar update in real-time.</p>
+      </div>
+      <div class="demo-layout">
+        <!-- Chat Panel -->
+        <div class="chat-panel" role="log" aria-label="Chat conversation" aria-live="polite">
+          <div class="chat-topbar" role="tablist" aria-label="Select profile">
+            <!-- Pills injected by JS -->
+          </div>
+          <div class="chat-messages" id="messages">
+            <div class="msg msg-system">Select a profile above to start exploring.</div>
+          </div>
+          <div class="chat-input-area">
+            <div class="suggestions" id="suggestions" aria-label="Suggested messages"></div>
+            <div class="input-row">
+              <input type="text" id="chat-input" placeholder="Ask FoodDNA anything..."
+                     aria-label="Type a message" onkeydown="if(event.key==='Enter')sendMessage()">
+              <button id="send-btn" onclick="sendMessage()" aria-label="Send message">&#8594;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- DNA Sidebar -->
+        <div class="dna-sidebar" id="dna-sidebar" aria-label="Food DNA profile">
+          <div class="dna-placeholder" id="dna-placeholder">
+            <div class="icon" aria-hidden="true">🧬</div>
+            <p><strong>Food DNA will appear here</strong><br>Select a profile to see their behavioral dimensions, habits, and emotional patterns.</p>
+          </div>
+          <div id="dna-content" style="display:none">
+            <div class="dna-profile-header">
+              <div class="dna-avatar" id="sidebar-avatar"></div>
+              <div class="dna-name" id="sidebar-name"></div>
+              <div class="dna-tagline" id="sidebar-tagline"></div>
+            </div>
+            <div id="dna-dimensions"></div>
+            <div class="dna-section">
+              <div class="dna-section-title">Top Cuisines</div>
+              <div id="dna-cuisines"></div>
+            </div>
+            <div class="dna-section">
+              <div class="dna-section-title">Habitual Items</div>
+              <div id="dna-habits"></div>
+            </div>
+            <div class="dna-section">
+              <div class="dna-section-title">Emotional Profile</div>
+              <div id="dna-emotions"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ PROFILES ═══════════════ -->
+  <section id="profiles" aria-label="Demo profiles">
+    <div class="container">
+      <p class="kicker">The Profiles</p>
+      <h2 class="section-title">Five diverse Indian food psychologies</h2>
+      <p class="section-subtitle">Each profile represents a different life stage, region, dietary identity, and emotional pattern.</p>
+      <div class="profiles-grid" id="profiles-grid">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ WHY DIFFERENT ═══════════════ -->
+  <section class="why-section" id="why" aria-label="Why FoodDNA is different">
+    <div class="container">
+      <p class="kicker">Why This Is Different</p>
+      <h2 class="section-title">Built by a Psychology Master's graduate</h2>
+      <div class="why-grid">
+        <div>
+          <h3 class="why-heading">Not another recommendation engine. A behavioral intelligence system.</h3>
+          <p class="why-subtitle">
+            Most food AI models treat food as data — collaborative filtering, content-based matching, price optimization. FoodDNA models food as <strong>psychology</strong>: identity, habit, emotion, culture, social dynamics, and life context.
+          </p>
+          <p class="why-subtitle" style="margin-top:16px">
+            The difference? A traditional system says "users like you ordered biryani." FoodDNA says "You have a Friday celebration habit loop — biryani is the routine that satisfies your weekend reward-seeking. If unavailable, you want something equally indulgent, not a salad."
+          </p>
+        </div>
+        <div class="frameworks-grid">
+          <div class="framework-card">
+            <h4>Habit Loop</h4>
+            <p>Cue → Routine → Reward. We detect your food habits from ordering patterns.</p>
+          </div>
+          <div class="framework-card">
+            <h4>Stages of Change</h4>
+            <p>Never push health on someone not ready. We detect your readiness stage.</p>
+          </div>
+          <div class="framework-card">
+            <h4>Self-Determination</h4>
+            <p>Autonomy, not commands. Nudge, not force. You choose, we suggest.</p>
+          </div>
+          <div class="framework-card">
+            <h4>Identity Theory</h4>
+            <p>Dietary identity is non-negotiable. A Jain stays Jain. Always.</p>
+          </div>
+          <div class="framework-card">
+            <h4>Behavioral Economics</h4>
+            <p>Show savings, not discounts. Frame value, not cheap. Anchor with original price.</p>
+          </div>
+          <div class="framework-card">
+            <h4>Cultural Psychology</h4>
+            <p>Friday biryani. Rain pakora. Festival sweets. Indian food is identity.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ CTA ═══════════════ -->
+  <section class="cta-section" id="cta" aria-label="Call to action">
+    <div class="container">
+      <h2>Ready to see your Food DNA?</h2>
+      <p class="subtitle">Connect your Swiggy account or explore with demo profiles.</p>
+      <div class="cta-actions">
+        <a href="#demo" class="btn btn-primary">Try Live Demo</a>
+        <a href="https://mcp.swiggy.com/builders/access/" class="btn btn-secondary" target="_blank" rel="noopener">Apply on Swiggy Builders Club</a>
+      </div>
+      <div class="cta-stats">
+        <div class="cta-stat">
+          <div class="num mono">5</div>
+          <div class="label">Demo Profiles</div>
+        </div>
+        <div class="cta-stat">
+          <div class="num mono">10</div>
+          <div class="label">Dimensions</div>
+        </div>
+        <div class="cta-stat">
+          <div class="num mono">3</div>
+          <div class="label">MCP Servers</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="footer" role="contentinfo">
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <span>FoodDNA Agent · Built for Swiggy Builders Club</span>
+      <div class="footer-links">
+        <a href="https://github.com/demo84431-ship-it/swigy-builders" target="_blank" rel="noopener">GitHub</a>
+        <a href="#why">Research</a>
+        <a href="https://mcp.swiggy.com/builders/access/" target="_blank" rel="noopener">Apply</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       JAVASCRIPT
+       ═══════════════════════════════════════════════════════════════ -->
+  <script>
+    // ── State ──────────────────────────────────────────────────────
+    let activeProfileId = null;
+    let activeProfileData = null;
+    let allProfiles = [];
+
+    // ── Profile Insights (hardcoded behavioral summaries) ─────────
+    const PROFILE_INSIGHTS = {
+      arjun: [
+        '<strong>Friday biryani habit</strong> — 4 consecutive Fridays detected',
+        '<strong>72% habitual</strong> — strong routines, low variety-seeking',
+        '<strong>Comfort food = curd rice</strong> — stress indicator'
+      ],
+      priya: [
+        '<strong>Family orders for 5</strong> — joint family, mixed dietary household',
+        '<strong>Sunday lunch ritual</strong> — 75% strength habit loop',
+        '<strong>Hosts guests often</strong> — 35% hospitality frequency'
+      ],
+      riya: [
+        '<strong>Late-night study fuel</strong> — 35% orders after 10 PM',
+        '<strong>Budget hunter</strong> — 70% coupon usage, ₹180 AOV',
+        '<strong>Egg roll = hostel comfort</strong> — 14 orders this month'
+      ],
+      karthik: [
+        '<strong>Orders for parents in Chennai</strong> — NRI remote ordering',
+        '<strong>Festival sweets tradition</strong> — 90% habit strength on festivals',
+        '<strong>12,000 km away</strong> — multi-address, timezone-aware'
+      ],
+      shah: [
+        '<strong>Jain strict</strong> — no onion, no garlic, no root vegetables',
+        '<strong>Diabetic wife</strong> — medical dietary filtering active',
+        '<strong>Morning thepla ritual</strong> — 95% breakfast regularity'
+      ]
+    };
+
+    const DIMENSION_TOOLTIPS = {
+      dietary: 'Your fundamental dietary classification. Non-negotiable — a Jain stays Jain.',
+      regional: 'Geographic and cultural food identity. Changes over years, not weeks.',
+      temporal: 'When you order and how often. Tracks meal timing and day-of-week patterns.',
+      price: 'How you perceive and respond to price. Budget tier, coupon sensitivity, value framing.',
+      health: 'Your relationship with health and nutrition. Detects your readiness for change.',
+      social: 'Whether you eat alone, with family, or host guests. The decision unit.',
+      emotional: 'How emotions influence food choices. Never push health on a stressed user.',
+      life: 'Your living situation and life context. A student ≠ a professional, even at same age.',
+      habit: 'Strength of recurring patterns. Habit loops: Cue → Routine → Reward.',
+      cuisine: 'Granular preferences beyond regional identity. Comfort vs exploration balance.'
+    };
+
+    // ── Profile Loading ───────────────────────────────────────────
+    async function loadProfiles() {
+      try {
+        const res = await fetch('/api/profiles');
+        const data = await res.json();
+        allProfiles = data.profiles;
+        renderProfilePills(data.profiles);
+        renderProfileCards(data.profiles);
+      } catch (err) {
+        console.error('Failed to load profiles:', err);
+      }
+    }
+
+    function renderProfilePills(profiles) {
+      const bar = document.querySelector('.chat-topbar');
+      bar.innerHTML = profiles.map(p =>
+        `<button class="profile-pill" data-id="${p.id}" onclick="selectProfile('${p.id}')" role="tab" aria-selected="false" aria-label="Select ${p.name}">
+          <span class="pill-emoji" aria-hidden="true">${p.avatar}</span> ${p.name}
+        </button>`
+      ).join('');
+    }
+
+    function renderProfileCards(profiles) {
+      const grid = document.getElementById('profiles-grid');
+      grid.innerHTML = profiles.map(p => {
+        const insights = PROFILE_INSIGHTS[p.id] || [];
+        return `
+          <div class="profile-card" onclick="selectProfile('${p.id}');document.getElementById('demo').scrollIntoView({behavior:'smooth'})" role="button" tabindex="0" aria-label="Try ${p.name}'s profile">
+            <div class="p-avatar" aria-hidden="true">${p.avatar}</div>
+            <div class="p-name">${p.name}</div>
+            <div class="p-meta">${p.age} · ${p.city} · ${p.dietary.replace(/_/g,' ')}</div>
+            <div class="p-insights">
+              ${insights.map(i => `<div class="p-insight">${i}</div>`).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function selectProfile(profileId) {
+      // Update pills
+      document.querySelectorAll('.profile-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.id === profileId);
+        p.setAttribute('aria-selected', p.dataset.id === profileId);
+      });
+
+      try {
+        const res = await fetch('/api/select-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile_id: profileId, session_id: 'default' }),
+        });
+        const data = await res.json();
+        activeProfileId = profileId;
+        activeProfileData = data.dna;
+
+        // Clear chat
+        const messages = document.getElementById('messages');
+        messages.innerHTML = `<div class="msg msg-system">Profile: ${data.profile.name} — ${data.profile.tagline}</div>
+          <div class="msg msg-agent"><strong>Welcome, ${data.profile.name}!</strong><br><br>I know your food psychology. Try asking me something, or pick a suggestion below.</div>`;
+
+        // Update sidebar
+        updateSidebar(data.profile, data.dna);
+        updateSuggestions('default');
+      } catch (err) {
+        console.error('Failed to select profile:', err);
+      }
+    }
+
+    function updateSidebar(profile, dna) {
+      document.getElementById('dna-placeholder').style.display = 'none';
+      document.getElementById('dna-content').style.display = 'block';
+      document.getElementById('sidebar-avatar').textContent = profile.avatar;
+      document.getElementById('sidebar-name').textContent = `${profile.name}, ${profile.age}`;
+      document.getElementById('sidebar-tagline').textContent = `${profile.tagline} · ${profile.city}`;
+
+      // Dimensions
+      const dims = document.getElementById('dna-dimensions');
+      const d = dna.dietary_identity || {};
+      const r = dna.regional_identity || {};
+      const t = dna.temporal_pattern || {};
+      const pp = dna.price_psychology || {};
+      const h = dna.health_orientation || {};
+      const s = dna.social_dynamics || {};
+      const e = dna.emotional_patterns || {};
+      const ls = dna.life_stage || {};
+      const hp = dna.habit_profile || {};
+
+      const dimData = [
+        { key: 'dietary', label: 'Dietary Identity', value: (d.primary || '—').replace(/_/g,' '), pct: (d.strictness || 0) * 100, color: 'var(--dim-dietary)' },
+        { key: 'regional', label: 'Regional Identity', value: (r.region || '—').replace(/_/g,' '), pct: 50, color: 'var(--dim-regional)' },
+        { key: 'temporal', label: 'Order Frequency', value: `${(t.order_interval_days || 0).toFixed(1)} days apart`, pct: Math.min(100, (1 / (t.order_interval_days || 3)) * 100), color: 'var(--dim-temporal)' },
+        { key: 'price', label: 'Budget Tier', value: (pp.budget_tier || '—').replace(/_/g,' '), pct: ({budget:20,value:40,moderate:60,comfortable:80,premium:100})[pp.budget_tier] || 50, color: 'var(--dim-emotional)' },
+        { key: 'health', label: 'Health Awareness', value: `${Math.round((h.health_awareness || 0) * 100)}%`, pct: (h.health_awareness || 0) * 100, color: 'var(--dim-dietary)' },
+        { key: 'social', label: 'Social Context', value: (s.primary_social_context || '—').replace(/_/g,' '), pct: (s.family_ratio || 0) * 100, color: 'var(--dim-regional)' },
+        { key: 'life', label: 'Life Stage', value: (ls.life_stage || '—').replace(/_/g,' '), pct: (ls.confidence || 0) * 100, color: 'var(--dim-temporal)' },
+        { key: 'habit', label: 'Habit Strength', value: `${Math.round((hp.overall_habit_strength || 0) * 100)}%`, pct: (hp.overall_habit_strength || 0) * 100, color: 'var(--dim-habit)' },
+      ];
+
+      dims.innerHTML = dimData.map(d => `
+        <div class="dna-dimension">
+          <div class="dna-dim-label">
+            <span class="dim-dot" style="background:${d.color}" aria-hidden="true"></span>
+            ${d.label}
+            <span class="tooltip" role="tooltip">${DIMENSION_TOOLTIPS[d.key] || ''}</span>
+          </div>
+          <div class="dna-dim-value">${d.value}</div>
+          <div class="dna-dim-bar"><div class="dna-dim-fill" style="width:${d.pct}%;background:${d.color}"></div></div>
+        </div>
+      `).join('');
+
+      // Cuisines
+      const cuisines = dna.cuisine_preferences || {};
+      const sorted = Object.entries(cuisines).sort((a,b) => b[1]-a[1]).slice(0,5);
+      document.getElementById('dna-cuisines').innerHTML = sorted.map(([name, val]) =>
+        `<div class="dna-item"><span class="name">${name.replace(/_/g,' ')}</span><span class="count mono">${Math.round(val*100)}%</span></div>`
+      ).join('') || '<div style="color:var(--text-3);font-size:13px">Building...</div>';
+
+      // Habits
+      const items = hp.recurring_items || [];
+      document.getElementById('dna-habits').innerHTML = items.slice(0,5).map(item =>
+        `<div class="dna-item"><span class="name">${item.item || ''}</span><span class="count">${item.orders || ''} orders</span></div>`
+      ).join('') || '<div style="color:var(--text-3);font-size:13px">Building...</div>';
+
+      // Emotions
+      const comfort = (e.comfort_foods || []);
+      document.getElementById('dna-emotions').innerHTML = comfort.length ?
+        `<div style="font-size:13px"><strong>Comfort:</strong> ${comfort.join(', ')}</div>` :
+        '<div style="color:var(--text-3);font-size:13px">Learning...</div>';
+    }
+
+    // ── Chat ──────────────────────────────────────────────────────
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = '';
+
+      addMessage('user', message);
+      showTyping();
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, session_id: 'default' }),
+        });
+        hideTyping();
+        const data = await res.json();
+        addMessage('agent', data.reply);
+        updateSuggestions(message);
+      } catch (err) {
+        hideTyping();
+        addMessage('agent', 'Something went wrong. Please try again.');
+      }
+    }
+
+    function sendSuggestion(text) {
+      document.getElementById('chat-input').value = text;
+      sendMessage();
+    }
+
+    function addMessage(type, text) {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = `msg msg-${type}`;
+      div.innerHTML = text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function showTyping() {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = 'typing'; div.id = 'typing-indicator';
+      div.innerHTML = '<span></span><span></span><span></span>';
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function hideTyping() {
+      const el = document.getElementById('typing-indicator');
+      if (el) el.remove();
+    }
+
+    // ── Suggestions ───────────────────────────────────────────────
+    const SUGGESTION_SETS = {
+      default: [
+        { text: 'Order my usual', emoji: '1' },
+        { text: "It's Friday", emoji: '2' },
+        { text: 'Plan my evening', emoji: '3' },
+        { text: 'Something healthy', emoji: '4' },
+        { text: 'Surprise me', emoji: '5' },
+      ],
+      after_order: [
+        { text: 'Order something else', emoji: '1' },
+        { text: 'Plan my evening', emoji: '2' },
+        { text: 'Something healthy', emoji: '3' },
+      ],
+      after_healthy: [
+        { text: 'Order my usual', emoji: '1' },
+        { text: 'Surprise me', emoji: '2' },
+        { text: "It's Friday", emoji: '3' },
+      ],
+      after_surprise: [
+        { text: 'Order my usual', emoji: '1' },
+        { text: 'Something healthy', emoji: '2' },
+        { text: 'Plan my evening', emoji: '3' },
+      ],
+      after_festival: [
+        { text: 'Order my usual', emoji: '1' },
+        { text: 'Something healthy', emoji: '2' },
+        { text: 'Surprise me', emoji: '3' },
+      ],
+      after_evening: [
+        { text: 'Order my usual', emoji: '1' },
+        { text: 'Something healthy', emoji: '2' },
+        { text: 'Surprise me', emoji: '3' },
+      ],
+    };
+
+    function updateSuggestions(lastMessage) {
+      const msg = (lastMessage || '').toLowerCase();
+      let key = 'default';
+      if (msg.includes('order') || msg.includes('usual')) key = 'after_order';
+      else if (msg.includes('healthy')) key = 'after_healthy';
+      else if (msg.includes('surprise') || msg.includes('different')) key = 'after_surprise';
+      else if (msg.includes('diwali') || msg.includes('holi') || msg.includes('festival')) key = 'after_festival';
+      else if (msg.includes('evening') || msg.includes('plan')) key = 'after_evening';
+
+      const suggestions = SUGGESTION_SETS[key] || SUGGESTION_SETS.default;
+      const container = document.getElementById('suggestions');
+      container.innerHTML = suggestions.map(s =>
+        `<button class="suggestion" onclick="sendSuggestion('${s.text}')" aria-label="Send: ${s.text}">${s.text}</button>`
+      ).join('');
+    }
+
+    // ── Theme Toggle ──────────────────────────────────────────────
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      document.getElementById('theme-toggle').textContent = isDark ? '🌙' : '☀️';
+      localStorage.setItem('fooddna-theme', isDark ? 'dark' : 'light');
+    }
+
+    // ── Smooth Scroll ─────────────────────────────────────────────
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // ── Keyboard Nav on Profile Cards ─────────────────────────────
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.classList.contains('profile-card')) {
+        e.target.click();
+      }
+    });
+
+    // ── Init ──────────────────────────────────────────────────────
+    loadProfiles();
+  </script>
+</body>
+</html>
