@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodDNA — Live Demo</title>
+  <meta name="description" content="Try FoodDNA live — select a profile and explore behavioral food intelligence.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       DESIGN TOKENS
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --canvas: #FAF7F2;
+      --canvas-deep: #F3EDE4;
+      --ink: #1C1A17;
+      --ink-soft: #3D3832;
+      --accent: #C0512F;
+      --accent-hover: #A3432A;
+      --accent-light: #E8A898;
+      --accent-bg: rgba(192,81,47,0.06);
+      --forest: #2F5B4F;
+      --muted: #8A817A;
+      --muted-light: #B5AFA8;
+      --surface: #FFFFFF;
+      --surface-warm: #F5F0E8;
+      --border: rgba(28,26,23,0.08);
+      --border-strong: rgba(28,26,23,0.15);
+      --shadow-raised: 0 2px 16px rgba(28,26,23,0.06);
+      --shadow-hover: 0 8px 32px rgba(28,26,23,0.10);
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 9999px;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body: 'Inter', -apple-system, system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+      --dim-dietary: #2F5B4F;
+      --dim-regional: #C0512F;
+      --dim-temporal: #4A7FB5;
+      --dim-emotional: #D4880F;
+      --dim-habit: #7B61A8;
+    }
+
+    [data-theme="dark"] {
+      --canvas: #1A1816;
+      --canvas-deep: #141210;
+      --ink: #F0EBE3;
+      --ink-soft: #C8C0B5;
+      --accent: #E07A5F;
+      --accent-hover: #C96A52;
+      --accent-light: rgba(224,122,95,0.2);
+      --accent-bg: rgba(224,122,95,0.08);
+      --forest: #5FAF8A;
+      --muted: #8A817A;
+      --muted-light: #6B6560;
+      --surface: #242220;
+      --surface-warm: #2A2725;
+      --border: rgba(240,235,227,0.08);
+      --border-strong: rgba(240,235,227,0.15);
+      --shadow-raised: 0 2px 16px rgba(0,0,0,0.2);
+      --shadow-hover: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESET
+       ═══════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: var(--font-body);
+      background: var(--canvas);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font-family: var(--font-body); cursor: pointer; }
+    input { font-family: var(--font-body); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LAYOUT — FULL SCREEN CHAT
+       ═══════════════════════════════════════════════════════════════ */
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr 340px;
+      grid-template-rows: 56px 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TOP BAR
+       ═══════════════════════════════════════════════════════════════ */
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+    .topbar-left {
+      display: flex; align-items: center; gap: 16px;
+    }
+    .topbar-logo {
+      font-family: var(--font-display); font-size: 17px; font-weight: 700;
+      color: var(--ink); display: flex; align-items: center; gap: 8px;
+      text-decoration: none;
+    }
+    .topbar-logo .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+    .topbar-sep { width: 1px; height: 20px; background: var(--border-strong); }
+    .topbar-title {
+      font-size: 13px; color: var(--muted); font-weight: 500;
+    }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .topbar-btn {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      width: 32px; height: 32px; border-radius: 8px; display: flex;
+      align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .topbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .topbar-link {
+      font-size: 13px; color: var(--muted); text-decoration: none;
+      padding: 6px 12px; border-radius: 8px; transition: all 0.2s;
+    }
+    .topbar-link:hover { color: var(--accent); background: var(--accent-bg); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LEFT SIDEBAR — PROFILE SELECTOR
+       ═══════════════════════════════════════════════════════════════ */
+    .sidebar-left {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-header {
+      padding: 16px; border-bottom: 1px solid var(--border);
+    }
+    .sidebar-header h3 {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px;
+    }
+    .sidebar-header p {
+      font-size: 11px; color: var(--muted-light);
+    }
+    .profile-list {
+      flex: 1; overflow-y: auto; padding: 8px;
+    }
+    .profile-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px; border-radius: var(--radius); cursor: pointer;
+      transition: all 0.2s; border: 1px solid transparent; margin-bottom: 4px;
+    }
+    .profile-item:hover {
+      background: var(--surface-warm); border-color: var(--border);
+    }
+    .profile-item.active {
+      background: var(--accent-bg); border-color: var(--accent);
+    }
+    .profile-item .p-avatar { font-size: 28px; flex-shrink: 0; }
+    .profile-item .p-info { flex: 1; min-width: 0; }
+    .profile-item .p-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+    .profile-item .p-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .profile-item .p-tagline {
+      font-size: 11px; color: var(--ink-soft); margin-top: 4px;
+      line-height: 1.4; display: none;
+    }
+    .profile-item.active .p-tagline { display: block; }
+    .profile-item .p-badge {
+      font-size: 10px; font-weight: 600; padding: 2px 8px;
+      border-radius: var(--radius-pill); background: var(--surface-warm);
+      color: var(--muted); white-space: nowrap; display: none;
+    }
+    .profile-item.active .p-badge { display: inline-block; background: var(--accent); color: #FFF; }
+
+    /* Quick prompts */
+    .quick-prompts {
+      padding: 12px; border-top: 1px solid var(--border);
+    }
+    .quick-prompts h4 {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px;
+    }
+    .quick-prompt {
+      display: block; width: 100%; text-align: left;
+      padding: 8px 12px; margin-bottom: 4px; border-radius: 8px;
+      font-size: 13px; color: var(--ink-soft); background: none;
+      border: 1px solid transparent; transition: all 0.2s;
+    }
+    .quick-prompt:hover {
+      background: var(--surface-warm); border-color: var(--border);
+      color: var(--accent);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       MAIN CHAT AREA
+       ═══════════════════════════════════════════════════════════════ */
+    .chat-main {
+      display: flex; flex-direction: column;
+      background: var(--canvas); overflow: hidden;
+    }
+
+    /* Messages */
+    .messages {
+      flex: 1; overflow-y: auto; padding: 24px 32px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .msg {
+      max-width: 75%; padding: 14px 18px; border-radius: 16px;
+      font-size: 15px; line-height: 1.6;
+      animation: msgIn 0.3s ease forwards;
+    }
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .msg-user {
+      align-self: flex-end; background: var(--accent); color: #FFF;
+      border-bottom-right-radius: 4px;
+    }
+    .msg-agent {
+      align-self: flex-start; background: var(--surface); border: 1px solid var(--border);
+      border-bottom-left-radius: 4px; max-width: 85%;
+    }
+    .msg-system {
+      align-self: center; background: none; color: var(--muted);
+      font-size: 12px; text-align: center; padding: 8px 16px;
+      border-radius: var(--radius-pill); border: 1px solid var(--border);
+    }
+    .msg-agent strong { color: var(--accent); }
+
+    /* Rich Cards */
+    .rich-card { margin-top: 8px; }
+    .rich-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .rich-card-img {
+      font-size: 28px; width: 44px; height: 44px; display: flex;
+      align-items: center; justify-content: center; background: var(--accent-bg);
+      border-radius: 10px; flex-shrink: 0;
+    }
+    .rich-card-info { flex: 1; }
+    .rich-card-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+    .rich-card-subtitle { font-size: 12px; color: var(--muted); }
+    .rich-card-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .meta-chip {
+      background: var(--surface-warm); padding: 3px 9px;
+      border-radius: 6px; font-size: 11px; color: var(--muted);
+    }
+    .rich-card-desc { font-size: 13px; color: var(--ink-soft); margin-bottom: 12px; }
+    .rich-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .action-btn {
+      background: var(--surface-warm); border: 1px solid var(--border);
+      color: var(--ink); padding: 7px 14px; border-radius: 8px;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      font-family: var(--font-body);
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .action-btn.primary { background: var(--accent); border-color: var(--accent); color: #FFF; }
+    .action-btn.primary:hover { background: var(--accent-hover); }
+    .rich-card-options { display: flex; gap: 8px; flex-wrap: wrap; }
+    .option-card {
+      flex: 1; min-width: 120px; background: var(--surface-warm);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; text-align: center; transition: all 0.2s;
+    }
+    .option-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .option-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; color: var(--ink); }
+    .option-detail { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+
+    /* Typing */
+    .typing { display: flex; gap: 5px; padding: 14px 18px; align-self: flex-start; }
+    .typing span {
+      width: 6px; height: 6px; background: var(--muted-light); border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out;
+    }
+    .typing span:nth-child(1) { animation-delay: -0.32s; }
+    .typing span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+    /* Input */
+    .chat-input-bar {
+      padding: 16px 32px 20px; border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .suggestions {
+      display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .suggestion {
+      background: var(--surface-warm); border: 1px solid var(--border);
+      color: var(--muted); padding: 5px 12px; border-radius: var(--radius-pill);
+      font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: var(--font-body);
+    }
+    .suggestion:hover { border-color: var(--accent); color: var(--accent); }
+    .input-row { display: flex; gap: 10px; align-items: center; }
+    #chat-input {
+      flex: 1; background: var(--surface-warm); border: 1px solid var(--border);
+      color: var(--ink); padding: 12px 16px; border-radius: var(--radius);
+      font-size: 14px; outline: none; transition: border-color 0.2s;
+    }
+    #chat-input:focus { border-color: var(--accent); }
+    #chat-input::placeholder { color: var(--muted-light); }
+    #send-btn {
+      background: var(--accent); border: none; color: #FFF;
+      width: 42px; height: 42px; border-radius: var(--radius); display: flex;
+      align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0;
+    }
+    #send-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RIGHT SIDEBAR — FOOD DNA
+       ═══════════════════════════════════════════════════════════════ */
+    .sidebar-right {
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .dna-header {
+      padding: 16px; border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    .dna-header h3 {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted);
+    }
+    .dna-content {
+      flex: 1; overflow-y: auto; padding: 16px;
+    }
+
+    /* Profile header in DNA sidebar */
+    .dna-profile-header {
+      text-align: center; margin-bottom: 20px; padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dna-avatar { font-size: 40px; margin-bottom: 6px; }
+    .dna-name { font-size: 16px; font-weight: 700; color: var(--ink); }
+    .dna-tagline { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Dimensions */
+    .dna-dimension { margin-bottom: 14px; }
+    .dna-dim-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 3px;
+      display: flex; align-items: center; gap: 5px; position: relative;
+    }
+    .dna-dim-label .dim-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .dna-dim-value { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .dna-dim-bar {
+      height: 5px; background: var(--surface-warm); border-radius: 3px;
+      margin-top: 4px; overflow: hidden;
+    }
+    .dna-dim-fill {
+      height: 100%; border-radius: 3px; width: 0;
+      transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* DNA sections */
+    .dna-section { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .dna-section-title {
+      font-size: 10px; font-weight: 600; color: var(--accent); margin-bottom: 10px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .dna-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 5px 0; font-size: 12px;
+    }
+    .dna-item .name { color: var(--ink); }
+    .dna-item .count { color: var(--muted); font-size: 11px; font-family: var(--font-mono); }
+
+    /* DNA Placeholder */
+    .dna-placeholder {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100%; color: var(--muted);
+      text-align: center; padding: 32px 16px;
+    }
+    .dna-placeholder svg { width: 48px; height: 48px; stroke: var(--muted-light); margin-bottom: 12px; }
+    .dna-placeholder p { font-size: 13px; line-height: 1.5; }
+    .dna-placeholder strong { color: var(--ink); }
+
+    /* Confidence badge */
+    .confidence-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: var(--radius-pill);
+      font-size: 11px; font-weight: 600; margin-top: 8px;
+    }
+    .confidence-badge.high { background: rgba(45,138,86,0.1); color: #2D8A56; }
+    .confidence-badge.medium { background: rgba(212,136,15,0.1); color: #D4880F; }
+    .confidence-badge.low { background: rgba(192,81,47,0.1); color: var(--accent); }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute; background: var(--ink); color: var(--canvas);
+      padding: 6px 10px; border-radius: 6px; font-size: 11px;
+      line-height: 1.4; max-width: 200px; z-index: 50;
+      pointer-events: none; opacity: 0; transition: opacity 0.2s;
+      bottom: calc(100% + 6px); left: 0; text-transform: none; font-weight: 400;
+    }
+    .dna-dim-label:hover .tooltip { opacity: 1; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       EMPTY STATE (no profile selected)
+       ═══════════════════════════════════════════════════════════════ */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100%; text-align: center;
+      padding: 48px 32px;
+    }
+    .empty-state-icon {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--accent-bg); display: flex; align-items: center;
+      justify-content: center; margin-bottom: 20px;
+    }
+    .empty-state-icon svg { width: 36px; height: 36px; stroke: var(--accent); }
+    .empty-state h2 {
+      font-family: var(--font-display); font-size: 22px; margin-bottom: 8px; color: var(--ink);
+    }
+    .empty-state p { font-size: 14px; color: var(--muted); max-width: 360px; line-height: 1.6; }
+    .empty-state .hint {
+      margin-top: 24px; display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted-light);
+    }
+    .empty-state .hint svg { width: 16px; height: 16px; stroke: var(--muted-light); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: 56px 1fr; }
+      .sidebar-left, .sidebar-right { display: none; }
+      .mobile-bar {
+        display: flex !important; gap: 6px; padding: 8px 16px;
+        overflow-x: auto; border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+    }
+    @media (min-width: 1025px) {
+      .mobile-bar { display: none !important; }
+    }
+    .mobile-bar { display: none; }
+    .mobile-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: var(--radius-pill);
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); white-space: nowrap; transition: all 0.2s;
+    }
+    .mobile-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .mobile-pill.active { border-color: var(--accent); background: var(--accent); color: #FFF; }
+
+    /* Sheet overlay for mobile DNA */
+    .mobile-dna-toggle {
+      display: none; position: fixed; bottom: 80px; right: 16px; z-index: 20;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--accent); color: #FFF; border: none;
+      box-shadow: var(--shadow-hover); align-items: center; justify-content: center;
+    }
+    @media (max-width: 1024px) {
+      .mobile-dna-toggle { display: flex; }
+    }
+    .mobile-dna-sheet {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      z-index: 30; background: var(--surface); border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.15); max-height: 60vh; overflow-y: auto;
+      padding: 20px; transform: translateY(100%); transition: transform 0.3s ease;
+    }
+    .mobile-dna-sheet.open { transform: translateY(0); }
+    .mobile-dna-sheet .sheet-handle {
+      width: 36px; height: 4px; border-radius: 2px; background: var(--border-strong);
+      margin: 0 auto 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- ═══ TOP BAR ═══ -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <a href="/" class="topbar-logo"><span class="dot"></span> FoodDNA</a>
+        <div class="topbar-sep"></div>
+        <span class="topbar-title">Live Demo</span>
+      </div>
+      <div class="topbar-right">
+        <a href="/" class="topbar-link">Back to Home</a>
+        <button class="topbar-btn" onclick="toggleTheme()" title="Toggle theme" id="theme-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ LEFT SIDEBAR — PROFILES ═══ -->
+    <div class="sidebar-left">
+      <div class="sidebar-header">
+        <h3>Profiles</h3>
+        <p>Select a persona to explore</p>
+      </div>
+      <div class="profile-list" id="profile-list"></div>
+      <div class="quick-prompts">
+        <h4>Quick Prompts</h4>
+        <button class="quick-prompt" onclick="sendSuggestion('Order my usual')">Order my usual</button>
+        <button class="quick-prompt" onclick="sendSuggestion('It\'s Friday')">It's Friday</button>
+        <button class="quick-prompt" onclick="sendSuggestion('Plan my evening')">Plan my evening</button>
+        <button class="quick-prompt" onclick="sendSuggestion('Something healthy')">Something healthy</button>
+        <button class="quick-prompt" onclick="sendSuggestion('Surprise me')">Surprise me</button>
+      </div>
+    </div>
+
+    <!-- ═══ MAIN CHAT ═══ -->
+    <div class="chat-main">
+      <!-- Mobile profile bar -->
+      <div class="mobile-bar" id="mobile-bar"></div>
+
+      <div class="messages" id="messages">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-state-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round"><path d="M12 2v20M4 6c4 0 4 4 8 4s4-4 8-4M4 18c4 0 4-4 8-4s4 4 8 4M4 12h16"/></svg>
+          </div>
+          <h2>Welcome to FoodDNA</h2>
+          <p>Select a profile from the left panel to start a conversation. Each profile represents a unique Indian food psychology.</p>
+          <div class="hint">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round"><path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
+            Click a profile to begin
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-bar">
+        <div class="suggestions" id="suggestions"></div>
+        <div class="input-row">
+          <input type="text" id="chat-input" placeholder="Ask FoodDNA anything..." disabled onkeydown="if(event.key==='Enter')sendMessage()">
+          <button id="send-btn" onclick="sendMessage()" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ RIGHT SIDEBAR — DNA ═══ -->
+    <div class="sidebar-right">
+      <div class="dna-header"><h3>Food DNA</h3></div>
+      <div class="dna-content">
+        <div class="dna-placeholder" id="dna-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round"><path d="M12 2v20M4 6c4 0 4 4 8 4s4-4 8-4M4 18c4 0 4-4 8-4s4 4 8 4M4 12h16"/></svg>
+          <p><strong>No profile selected</strong><br>Choose a profile to see their behavioral dimensions, habits, and emotional patterns.</p>
+        </div>
+        <div id="dna-content" style="display:none">
+          <div class="dna-profile-header">
+            <div class="dna-avatar" id="sidebar-avatar"></div>
+            <div class="dna-name" id="sidebar-name"></div>
+            <div class="dna-tagline" id="sidebar-tagline"></div>
+            <div id="sidebar-confidence"></div>
+          </div>
+          <div id="dna-dimensions"></div>
+          <div class="dna-section">
+            <div class="dna-section-title">Top Cuisines</div>
+            <div id="dna-cuisines"></div>
+          </div>
+          <div class="dna-section">
+            <div class="dna-section-title">Habitual Items</div>
+            <div id="dna-habits"></div>
+          </div>
+          <div class="dna-section">
+            <div class="dna-section-title">Emotional Profile</div>
+            <div id="dna-emotions"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile DNA toggle -->
+  <button class="mobile-dna-toggle" onclick="toggleMobileDNA()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M4 6c4 0 4 4 8 4s4-4 8-4M4 18c4 0 4-4 8-4s4 4 8 4M4 12h16"/></svg>
+  </button>
+  <div class="mobile-dna-sheet" id="mobile-dna-sheet">
+    <div class="sheet-handle"></div>
+    <div id="mobile-dna-content"></div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════════════════════
+    let activeProfileId = null;
+    let allProfiles = [];
+
+    const DIMENSION_TOOLTIPS = {
+      dietary: 'Your fundamental dietary classification. Non-negotiable.',
+      regional: 'Geographic and cultural food identity.',
+      temporal: 'When you order and how often.',
+      price: 'How you perceive and respond to price.',
+      health: 'Your relationship with health and nutrition.',
+      social: 'Whether you eat alone, with family, or host guests.',
+      emotional: 'How emotions influence food choices.',
+      life: 'Your living situation and life context.',
+      habit: 'Strength of recurring patterns.',
+      cuisine: 'Granular preferences beyond regional identity.'
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // PROFILES
+    // ═══════════════════════════════════════════════════════════════
+    async function loadProfiles() {
+      try {
+        const res = await fetch('/api/profiles');
+        const data = await res.json();
+        allProfiles = data.profiles;
+        renderProfileList(data.profiles);
+        renderMobileBar(data.profiles);
+      } catch (err) {
+        console.error('Failed to load profiles:', err);
+      }
+    }
+
+    function renderProfileList(profiles) {
+      const list = document.getElementById('profile-list');
+      list.innerHTML = profiles.map(p => `
+        <div class="profile-item" data-id="${p.id}" onclick="selectProfile('${p.id}')">
+          <div class="p-avatar">${p.avatar}</div>
+          <div class="p-info">
+            <div class="p-name">${p.name}</div>
+            <div class="p-meta">${p.age} · ${p.city} · ${p.dietary.replace(/_/g,' ')}</div>
+            <div class="p-tagline">${p.tagline}</div>
+          </div>
+          <span class="p-badge">${p.data_points} pts</span>
+        </div>
+      `).join('');
+    }
+
+    function renderMobileBar(profiles) {
+      const bar = document.getElementById('mobile-bar');
+      bar.innerHTML = profiles.map(p =>
+        `<button class="mobile-pill" data-id="${p.id}" onclick="selectProfile('${p.id}')">${p.avatar} ${p.name}</button>`
+      ).join('');
+    }
+
+    async function selectProfile(profileId) {
+      // Update UI
+      document.querySelectorAll('.profile-item').forEach(p => {
+        p.classList.toggle('active', p.dataset.id === profileId);
+      });
+      document.querySelectorAll('.mobile-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.id === profileId);
+      });
+
+      // Hide empty state
+      const emptyState = document.getElementById('empty-state');
+      if (emptyState) emptyState.style.display = 'none';
+
+      // Enable input
+      document.getElementById('chat-input').disabled = false;
+      document.getElementById('send-btn').disabled = false;
+
+      try {
+        const res = await fetch('/api/select-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile_id: profileId, session_id: 'default' }),
+        });
+        const data = await res.json();
+        activeProfileId = profileId;
+
+        const messages = document.getElementById('messages');
+        messages.innerHTML = `
+          <div class="msg msg-system">Profile loaded: ${data.profile.name} — ${data.profile.tagline}</div>
+          <div class="msg msg-agent"><strong>Welcome, ${data.profile.name}!</strong><br><br>I know your food psychology. Try asking me something, or pick a suggestion below.</div>
+        `;
+
+        updateSidebar(data.profile, data.dna);
+        updateSuggestions('default');
+      } catch (err) {
+        console.error('Failed to select profile:', err);
+      }
+    }
+
+    function updateSidebar(profile, dna) {
+      document.getElementById('dna-placeholder').style.display = 'none';
+      const content = document.getElementById('dna-content');
+      content.style.display = 'block';
+      document.getElementById('sidebar-avatar').textContent = profile.avatar;
+      document.getElementById('sidebar-name').textContent = `${profile.name}, ${profile.age}`;
+      document.getElementById('sidebar-tagline').textContent = `${profile.tagline} · ${profile.city}`;
+
+      // Confidence badge
+      const conf = profile.confidence_score || 0;
+      const confClass = conf >= 0.8 ? 'high' : conf >= 0.5 ? 'medium' : 'low';
+      document.getElementById('sidebar-confidence').innerHTML =
+        `<span class="confidence-badge ${confClass}">${Math.round(conf * 100)}% confidence · ${profile.data_points} data points</span>`;
+
+      const d = dna.dietary_identity || {};
+      const r = dna.regional_identity || {};
+      const t = dna.temporal_pattern || {};
+      const pp = dna.price_psychology || {};
+      const h = dna.health_orientation || {};
+      const s = dna.social_dynamics || {};
+      const e = dna.emotional_patterns || {};
+      const ls = dna.life_stage || {};
+      const hp = dna.habit_profile || {};
+
+      const dimData = [
+        { key: 'dietary', label: 'Dietary', value: (d.primary || '—').replace(/_/g,' '), pct: (d.strictness || 0) * 100, color: 'var(--dim-dietary)' },
+        { key: 'regional', label: 'Regional', value: (r.region || '—').replace(/_/g,' '), pct: 50, color: 'var(--dim-regional)' },
+        { key: 'temporal', label: 'Frequency', value: `${(t.order_interval_days || 0).toFixed(1)}d apart`, pct: Math.min(100, (1 / (t.order_interval_days || 3)) * 100), color: 'var(--dim-temporal)' },
+        { key: 'price', label: 'Budget', value: (pp.budget_tier || '—').replace(/_/g,' '), pct: ({budget:20,value:40,moderate:60,comfortable:80,premium:100})[pp.budget_tier] || 50, color: 'var(--dim-emotional)' },
+        { key: 'health', label: 'Health', value: `${Math.round((h.health_awareness || 0) * 100)}%`, pct: (h.health_awareness || 0) * 100, color: 'var(--dim-dietary)' },
+        { key: 'social', label: 'Social', value: (s.primary_social_context || '—').replace(/_/g,' '), pct: (s.family_ratio || 0) * 100, color: 'var(--dim-regional)' },
+        { key: 'life', label: 'Life Stage', value: (ls.life_stage || '—').replace(/_/g,' '), pct: (ls.confidence || 0) * 100, color: 'var(--dim-temporal)' },
+        { key: 'habit', label: 'Habits', value: `${Math.round((hp.overall_habit_strength || 0) * 100)}%`, pct: (hp.overall_habit_strength || 0) * 100, color: 'var(--dim-habit)' },
+      ];
+
+      document.getElementById('dna-dimensions').innerHTML = dimData.map(d => `
+        <div class="dna-dimension">
+          <div class="dna-dim-label">
+            <span class="dim-dot" style="background:${d.color}"></span>
+            ${d.label}
+            <span class="tooltip">${DIMENSION_TOOLTIPS[d.key] || ''}</span>
+          </div>
+          <div class="dna-dim-value">${d.value}</div>
+          <div class="dna-dim-bar"><div class="dna-dim-fill" data-pct="${d.pct}" style="background:${d.color}"></div></div>
+        </div>
+      `).join('');
+
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.dna-dim-fill').forEach(bar => {
+          bar.style.width = bar.dataset.pct + '%';
+        });
+      });
+
+      const cuisines = dna.cuisine_preferences || {};
+      const sorted = Object.entries(cuisines).sort((a,b) => b[1]-a[1]).slice(0,5);
+      document.getElementById('dna-cuisines').innerHTML = sorted.map(([name, val]) =>
+        `<div class="dna-item"><span class="name">${name.replace(/_/g,' ')}</span><span class="count">${Math.round(val*100)}%</span></div>`
+      ).join('') || '<div style="color:var(--muted);font-size:12px">Building...</div>';
+
+      const items = hp.recurring_items || [];
+      document.getElementById('dna-habits').innerHTML = items.slice(0,5).map(item =>
+        `<div class="dna-item"><span class="name">${item.item || ''}</span><span class="count">${item.orders || ''}x</span></div>`
+      ).join('') || '<div style="color:var(--muted);font-size:12px">Building...</div>';
+
+      const comfort = (e.comfort_foods || []);
+      document.getElementById('dna-emotions').innerHTML = comfort.length ?
+        `<div style="font-size:12px"><strong>Comfort:</strong> ${comfort.join(', ')}</div>` :
+        '<div style="color:var(--muted);font-size:12px">Learning...</div>';
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CHAT
+    // ═══════════════════════════════════════════════════════════════
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message || input.disabled) return;
+      input.value = '';
+
+      addMessage('user', message);
+      showTyping();
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, session_id: 'default' }),
+        });
+        hideTyping();
+        const data = await res.json();
+        addMessage('agent', data.reply);
+        updateSuggestions(message);
+      } catch (err) {
+        hideTyping();
+        addMessage('agent', 'Something went wrong. Please try again.');
+      }
+    }
+
+    function sendSuggestion(text) {
+      if (!activeProfileId) return;
+      document.getElementById('chat-input').value = text;
+      sendMessage();
+    }
+
+    function addMessage(type, text) {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = `msg msg-${type}`;
+      div.innerHTML = text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function showTyping() {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = 'typing'; div.id = 'typing-indicator';
+      div.innerHTML = '<span></span><span></span><span></span>';
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function hideTyping() {
+      const el = document.getElementById('typing-indicator');
+      if (el) el.remove();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SUGGESTIONS
+    // ═══════════════════════════════════════════════════════════════
+    const SUGGESTION_SETS = {
+      default: ['Order my usual', "It's Friday", 'Plan my evening', 'Something healthy', 'Surprise me'],
+      after_order: ['Order something else', 'Plan my evening', 'Something healthy'],
+      after_healthy: ['Order my usual', 'Surprise me', "It's Friday"],
+      after_surprise: ['Order my usual', 'Something healthy', 'Plan my evening'],
+      after_festival: ['Order my usual', 'Something healthy', 'Surprise me'],
+      after_evening: ['Order my usual', 'Something healthy', 'Surprise me'],
+    };
+
+    function updateSuggestions(lastMessage) {
+      const msg = (lastMessage || '').toLowerCase();
+      let key = 'default';
+      if (msg.includes('order') || msg.includes('usual')) key = 'after_order';
+      else if (msg.includes('healthy')) key = 'after_healthy';
+      else if (msg.includes('surprise') || msg.includes('different')) key = 'after_surprise';
+      else if (msg.includes('diwali') || msg.includes('holi') || msg.includes('festival')) key = 'after_festival';
+      else if (msg.includes('evening') || msg.includes('plan')) key = 'after_evening';
+
+      const container = document.getElementById('suggestions');
+      container.innerHTML = (SUGGESTION_SETS[key] || SUGGESTION_SETS.default).map(s =>
+        `<button class="suggestion" onclick="sendSuggestion('${s}')">${s}</button>`
+      ).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // THEME
+    // ═══════════════════════════════════════════════════════════════
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      localStorage.setItem('fooddna-theme', isDark ? 'light' : 'dark');
+      const btn = document.getElementById('theme-btn');
+      btn.innerHTML = isDark
+        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    }
+
+    (function() {
+      const saved = localStorage.getItem('fooddna-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        const btn = document.getElementById('theme-btn');
+        if (btn) btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      }
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    // MOBILE DNA SHEET
+    // ═══════════════════════════════════════════════════════════════
+    function toggleMobileDNA() {
+      const sheet = document.getElementById('mobile-dna-sheet');
+      sheet.classList.toggle('open');
+      if (sheet.classList.contains('open')) {
+        const dnaHTML = document.getElementById('dna-content').innerHTML;
+        document.getElementById('mobile-dna-content').innerHTML = dnaHTML;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════════
+    loadProfiles();
+  </script>
+</body>
+</html>

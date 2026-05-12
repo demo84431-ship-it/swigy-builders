@@ -373,6 +373,13 @@ async def root_v1():
         return HTMLResponse(f.read())
 
 
+@app.get("/demo")
+async def demo_page():
+    """Serve the dedicated demo page (full-screen chat interface)."""
+    with open("static/demo.html", "r") as f:
+        return HTMLResponse(f.read())
+
+
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "agent": "FoodDNA", "version": "1.0.0", "profiles": len(ALL_PROFILES)}
