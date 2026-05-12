@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodDNA — Psychology-First Food Intelligence</title>
+  <meta name="description" content="FoodDNA builds behavioral profiles from Swiggy signals — cultural identity, emotional patterns, habit loops, life stage.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       DESIGN TOKENS
+       Warm editorial — terracotta on warm paper.
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --canvas: #FAF7F2;
+      --canvas-deep: #F3EDE4;
+      --ink: #1C1A17;
+      --ink-soft: #3D3832;
+      --accent: #C0512F;
+      --accent-hover: #A3432A;
+      --accent-light: #E8A898;
+      --accent-bg: rgba(192,81,47,0.06);
+      --forest: #2F5B4F;
+      --forest-light: rgba(47,91,79,0.1);
+      --muted: #8A817A;
+      --muted-light: #B5AFA8;
+      --surface: #FFFFFF;
+      --surface-warm: #F5F0E8;
+      --border: rgba(28,26,23,0.08);
+      --border-strong: rgba(28,26,23,0.15);
+      --shadow-raised: 0 2px 16px rgba(28,26,23,0.06);
+      --shadow-hover: 0 8px 32px rgba(28,26,23,0.10);
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 9999px;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body: 'Inter', -apple-system, system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+      --dim-dietary: #2F5B4F;
+      --dim-regional: #C0512F;
+      --dim-temporal: #4A7FB5;
+      --dim-emotional: #D4880F;
+      --dim-habit: #7B61A8;
+    }
+
+    /* ═══ Dark mode tokens ═══ */
+    [data-theme="dark"] {
+      --canvas: #1A1816;
+      --canvas-deep: #141210;
+      --ink: #F0EBE3;
+      --ink-soft: #C8C0B5;
+      --accent: #E07A5F;
+      --accent-hover: #C96A52;
+      --accent-light: rgba(224,122,95,0.2);
+      --accent-bg: rgba(224,122,95,0.08);
+      --forest: #5FAF8A;
+      --forest-light: rgba(95,175,138,0.12);
+      --muted: #8A817A;
+      --muted-light: #6B6560;
+      --surface: #242220;
+      --surface-warm: #2A2725;
+      --border: rgba(240,235,227,0.08);
+      --border-strong: rgba(240,235,227,0.15);
+      --shadow-raised: 0 2px 16px rgba(0,0,0,0.2);
+      --shadow-hover: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESET + BASE
+       ═══════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--canvas);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.15; }
+    h4 { font-family: var(--font-body); font-weight: 600; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img { max-width: 100%; display: block; }
+    button { font-family: var(--font-body); }
+
+    .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .serif { font-family: var(--font-display); }
+    .kicker {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent);
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    section { padding: 100px 0; position: relative; }
+
+    /* Reveal animation base */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      will-change: transform, opacity;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════════════════ */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--canvas); border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+    .header.scrolled {
+      box-shadow: var(--shadow-raised);
+      background: color-mix(in srgb, var(--canvas) 92%, transparent);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .header-logo {
+      font-family: var(--font-display); font-size: 20px; font-weight: 700;
+      color: var(--ink); display: flex; align-items: center; gap: 10px;
+    }
+    .header-logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+    .header-nav { display: flex; align-items: center; gap: 32px; }
+    .header-nav a {
+      font-size: 14px; font-weight: 500; color: var(--muted);
+      transition: color 0.2s; position: relative;
+    }
+    .header-nav a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+      height: 1.5px; background: var(--accent); transform: scaleX(0);
+      transition: transform 0.25s ease; transform-origin: left;
+    }
+    .header-nav a:hover { color: var(--ink); text-decoration: none; }
+    .header-nav a:hover::after { transform: scaleX(1); }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .btn-theme {
+      background: none; border: 1px solid var(--border-strong); color: var(--muted);
+      width: 36px; height: 36px; border-radius: var(--radius); cursor: pointer;
+      font-size: 15px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-theme:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       BUTTONS
+       ═══════════════════════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 14px 28px; border-radius: var(--radius); font-size: 15px;
+      font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; gap: 8px;
+      position: relative; overflow: hidden;
+    }
+    .btn::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .btn-primary { background: var(--accent); color: #FFF; }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-raised); }
+    .btn-secondary { background: transparent; color: var(--ink); border: 1px solid var(--border-strong); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-ghost { background: none; color: var(--accent); padding: 14px 16px; }
+    .btn-ghost:hover { text-decoration: underline; }
+    .btn-pill { border-radius: var(--radius-pill); padding: 10px 22px; font-size: 13px; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════════════════════ */
+    .hero {
+      min-height: 100vh; display: flex; align-items: flex-start;
+      padding: 140px 0 80px; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -200px; right: -200px;
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, var(--accent-bg) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    .hero-kicker { margin-bottom: 20px; }
+    .hero h1 {
+      font-size: clamp(36px, 5vw, 56px); margin-bottom: 24px; color: var(--ink);
+      letter-spacing: -0.02em; font-weight: 700;
+    }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .hero-subtitle {
+      font-size: 18px; color: var(--ink-soft); line-height: 1.7; margin-bottom: 36px; max-width: 520px;
+    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .hero-stats {
+      display: flex; gap: 40px; margin-top: 56px; padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    .hero-stat { text-align: left; }
+    .hero-stat .num {
+      font-family: var(--font-display); font-size: 32px; font-weight: 700;
+      color: var(--ink); font-variant-numeric: tabular-nums;
+    }
+    .hero-stat .label { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+    /* ═══ DNA Helix Canvas ═══ */
+    .dna-canvas-wrap {
+      position: relative; height: 500px; display: flex;
+      align-items: center; justify-content: center;
+    }
+    #dna-canvas { width: 100%; height: 100%; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HOW IT WORKS — PIPELINE
+       ═══════════════════════════════════════════════════════════════ */
+    .pipeline { background: var(--canvas-deep); }
+    .pipeline-track {
+      display: flex; gap: 0; margin-top: 56px; position: relative;
+    }
+    .pipeline-step {
+      flex: 1; padding: 40px 32px; position: relative;
+      background: var(--surface); border: 1px solid var(--border);
+      transition: all 0.35s ease;
+    }
+    .pipeline-step:first-child { border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+    .pipeline-step:last-child { border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
+    .pipeline-step:hover { z-index: 2; box-shadow: var(--shadow-hover); transform: translateY(-4px); }
+    .pipeline-num {
+      font-family: var(--font-display); font-size: 56px; font-weight: 700;
+      color: var(--accent-light); margin-bottom: 16px; line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .pipeline-step h3 { font-size: 20px; margin-bottom: 12px; color: var(--ink); }
+    .pipeline-step p { font-size: 15px; color: var(--muted); line-height: 1.65; }
+    .pipeline-connector {
+      position: absolute; top: 50%; right: -16px; z-index: 3;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--accent); color: #FFF; display: flex;
+      align-items: center; justify-content: center; font-size: 14px;
+      transform: translateY(-50%); box-shadow: var(--shadow-raised);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LIVE DEMO
+       ═══════════════════════════════════════════════════════════════ */
+    .demo-section { background: var(--canvas); }
+    .demo-header { text-align: center; margin-bottom: 48px; }
+    .demo-header h2 { font-size: clamp(28px, 3.5vw, 40px); margin-bottom: 12px; }
+    .demo-header p { font-size: 17px; color: var(--muted); max-width: 560px; margin: 0 auto; }
+
+    .demo-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; min-height: 640px; }
+
+    /* ═══ Profile Selector ═══ */
+    .profile-bar {
+      display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto;
+      border-bottom: 1px solid var(--border); -webkit-overflow-scrolling: touch;
+    }
+    .profile-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: var(--radius-pill);
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); white-space: nowrap; transition: all 0.25s;
+    }
+    .profile-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .profile-pill.active {
+      border-color: var(--accent); background: var(--accent);
+      color: #FFF; box-shadow: 0 2px 8px rgba(192,81,47,0.25);
+    }
+
+    /* ═══ Chat Panel ═══ */
+    .chat-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 24px;
+      display: flex; flex-direction: column; gap: 16px;
+      min-height: 400px; max-height: 500px;
+    }
+    .msg {
+      max-width: 85%; padding: 14px 18px; border-radius: 16px;
+      font-size: 15px; line-height: 1.6; opacity: 0; transform: translateY(12px);
+    }
+    .msg.visible { opacity: 1; transform: translateY(0); transition: all 0.35s ease; }
+    .msg-user {
+      align-self: flex-end; background: var(--accent); color: #FFF;
+      border-bottom-right-radius: 4px;
+    }
+    .msg-agent {
+      align-self: flex-start; background: var(--surface-warm); border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .msg-system {
+      align-self: center; background: none; color: var(--muted);
+      font-size: 13px; text-align: center; padding: 8px;
+    }
+
+    /* ═══ Rich Cards ═══ */
+    .rich-card { margin-top: 8px; }
+    .rich-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .rich-card-img {
+      font-size: 28px; width: 48px; height: 48px; display: flex;
+      align-items: center; justify-content: center; background: var(--accent-bg);
+      border-radius: var(--radius); flex-shrink: 0;
+    }
+    .rich-card-info { flex: 1; }
+    .rich-card-title { font-size: 16px; font-weight: 600; color: var(--ink); }
+    .rich-card-subtitle { font-size: 13px; color: var(--muted); }
+    .rich-card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .meta-chip {
+      background: var(--surface-warm); padding: 4px 10px;
+      border-radius: var(--radius); font-size: 12px; color: var(--muted);
+    }
+    .rich-card-desc { font-size: 14px; color: var(--ink-soft); margin-bottom: 12px; }
+    .rich-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .action-btn {
+      background: var(--surface-warm); border: 1px solid var(--border);
+      color: var(--ink); padding: 8px 16px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      font-family: var(--font-body);
+    }
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .action-btn.primary { background: var(--accent); border-color: var(--accent); color: #FFF; }
+    .action-btn.primary:hover { background: var(--accent-hover); }
+
+    .rich-card-options { display: flex; gap: 10px; flex-wrap: wrap; }
+    .option-card {
+      flex: 1; min-width: 140px; background: var(--surface-warm);
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 14px; text-align: center; transition: all 0.2s;
+    }
+    .option-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-raised); }
+    .option-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+    .option-detail { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+
+    /* ═══ Suggestions ═══ */
+    .chat-input-area { padding: 16px; border-top: 1px solid var(--border); background: var(--surface); }
+    .suggestions { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .suggestion {
+      background: var(--surface-warm); border: 1px solid var(--border);
+      color: var(--muted); padding: 6px 14px; border-radius: var(--radius-pill);
+      font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: var(--font-body);
+    }
+    .suggestion:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .input-row { display: flex; gap: 12px; align-items: center; }
+    #chat-input {
+      flex: 1; background: var(--surface-warm); border: 1px solid var(--border);
+      color: var(--ink); padding: 12px 16px; border-radius: var(--radius-lg);
+      font-size: 15px; font-family: var(--font-body); outline: none; transition: border-color 0.2s;
+    }
+    #chat-input:focus { border-color: var(--accent); }
+    #chat-input::placeholder { color: var(--muted-light); }
+    #send-btn {
+      background: var(--accent); border: none; color: #FFF;
+      width: 44px; height: 44px; border-radius: var(--radius-lg); cursor: pointer;
+      font-size: 18px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    #send-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+    /* ═══ Typing indicator ═══ */
+    .typing { display: flex; gap: 5px; padding: 14px 18px; align-self: flex-start; }
+    .typing span {
+      width: 7px; height: 7px; background: var(--muted-light); border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out;
+    }
+    .typing span:nth-child(1) { animation-delay: -0.32s; }
+    .typing span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+    /* ═══ DNA Sidebar ═══ */
+    .dna-sidebar {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px; overflow-y: auto;
+    }
+    .dna-profile-header {
+      text-align: center; margin-bottom: 24px; padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dna-avatar { font-size: 48px; margin-bottom: 8px; }
+    .dna-name { font-size: 18px; font-weight: 700; color: var(--ink); }
+    .dna-tagline { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    .dna-dimension { margin-bottom: 16px; }
+    .dna-dim-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
+      display: flex; align-items: center; gap: 6px; cursor: help; position: relative;
+    }
+    .dna-dim-label .dim-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .dna-dim-value { font-size: 15px; font-weight: 600; color: var(--ink); }
+    .dna-dim-bar {
+      height: 6px; background: var(--surface-warm); border-radius: 3px;
+      margin-top: 6px; overflow: hidden;
+    }
+    .dna-dim-fill {
+      height: 100%; border-radius: 3px; width: 0;
+      transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .dna-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .dna-section-title {
+      font-size: 11px; font-weight: 600; color: var(--accent); margin-bottom: 12px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .dna-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+    .dna-item .name { color: var(--ink); }
+    .dna-item .count { color: var(--muted); font-size: 12px; font-family: var(--font-mono); }
+
+    .dna-placeholder {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; color: var(--muted); text-align: center; padding: 48px 24px;
+    }
+    .dna-placeholder svg { width: 56px; height: 56px; stroke: var(--muted-light); margin-bottom: 16px; }
+    .dna-placeholder p { font-size: 14px; line-height: 1.6; }
+    .dna-placeholder strong { color: var(--ink); }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute; background: var(--ink); color: var(--canvas);
+      padding: 8px 12px; border-radius: var(--radius); font-size: 12px;
+      line-height: 1.4; max-width: 220px; z-index: 50;
+      pointer-events: none; opacity: 0; transition: opacity 0.2s;
+      bottom: calc(100% + 8px); left: 0; text-transform: none; font-weight: 400;
+    }
+    .dna-dim-label:hover .tooltip { opacity: 1; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PROFILES SECTION
+       ═══════════════════════════════════════════════════════════════ */
+    .profiles-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 56px; }
+    .profile-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 28px 24px; text-align: center;
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative; overflow: hidden;
+    }
+    .profile-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--accent); transform: scaleX(0); transition: transform 0.3s ease;
+      transform-origin: left;
+    }
+    .profile-card:hover { border-color: var(--accent); box-shadow: var(--shadow-hover); transform: translateY(-6px); }
+    .profile-card:hover::before { transform: scaleX(1); }
+    .profile-card .p-avatar { font-size: 40px; margin-bottom: 12px; }
+    .profile-card .p-name { font-size: 17px; font-weight: 700; margin-bottom: 2px; color: var(--ink); }
+    .profile-card .p-meta { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+    .profile-card .p-insights { text-align: left; }
+    .profile-card .p-insight {
+      font-size: 12px; color: var(--ink-soft); padding: 7px 0;
+      border-top: 1px solid var(--border); line-height: 1.45;
+    }
+    .profile-card .p-insight:first-child { border-top: none; }
+    .profile-card .p-insight strong { color: var(--ink); font-weight: 600; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       WHY DIFFERENT
+       ═══════════════════════════════════════════════════════════════ */
+    .why-section { background: var(--canvas-deep); }
+    .why-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 72px;
+      align-items: start; margin-top: 56px;
+    }
+    .why-heading { font-size: 28px; line-height: 1.3; margin-bottom: 16px; color: var(--ink); }
+    .why-subtitle { font-size: 16px; color: var(--ink-soft); line-height: 1.7; }
+    .frameworks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .framework-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px; transition: all 0.25s;
+    }
+    .framework-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: var(--shadow-raised); }
+    .framework-card h4 { font-size: 15px; margin-bottom: 8px; color: var(--ink); }
+    .framework-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CTA
+       ═══════════════════════════════════════════════════════════════ */
+    .cta-section { text-align: center; padding: 120px 0; }
+    .cta-section h2 { font-size: clamp(28px, 3.5vw, 40px); margin-bottom: 12px; color: var(--ink); }
+    .cta-section .subtitle { font-size: 18px; color: var(--muted); margin-bottom: 36px; }
+    .cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .cta-stats {
+      display: flex; gap: 56px; justify-content: center; margin-top: 56px;
+      padding-top: 32px; border-top: 1px solid var(--border);
+    }
+    .cta-stat .num {
+      font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--ink);
+    }
+    .cta-stat .label { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════════ */
+    .footer {
+      padding: 32px 0; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; color: var(--muted);
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { color: var(--muted); font-size: 13px; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .dna-canvas-wrap { height: 300px; }
+      .demo-layout { grid-template-columns: 1fr; }
+      .dna-sidebar { max-height: 400px; }
+      .profiles-grid { grid-template-columns: repeat(3, 1fr); }
+      .why-grid { grid-template-columns: 1fr; }
+      .pipeline-track { flex-direction: column; }
+      .pipeline-step:first-child { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+      .pipeline-step:last-child { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+      .pipeline-connector { display: none; }
+    }
+    @media (max-width: 768px) {
+      section { padding: 64px 0; }
+      .hero { min-height: auto; padding: 100px 0 64px; }
+      .hero h1 { font-size: 32px; }
+      .hero-stats { gap: 24px; flex-wrap: wrap; }
+      .profiles-grid { grid-template-columns: 1fr 1fr; }
+      .frameworks-grid { grid-template-columns: 1fr; }
+      .cta-stats { gap: 24px; flex-wrap: wrap; }
+      .header-nav { display: none; }
+      .footer { flex-direction: column; gap: 12px; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 28px; }
+      .profiles-grid { grid-template-columns: 1fr; }
+      .pipeline-step { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="header" id="header">
+    <a href="#" class="header-logo">
+      <span class="dot"></span> FoodDNA
+    </a>
+    <nav class="header-nav">
+      <a href="#pipeline">How it works</a>
+      <a href="#demo">Live Demo</a>
+      <a href="#profiles">Profiles</a>
+      <a href="#research">Research</a>
+    </nav>
+    <div class="header-right">
+      <button class="btn-theme" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+      <a href="#demo" class="btn btn-primary btn-pill">Try Demo</a>
+    </div>
+  </header>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="reveal">
+          <p class="kicker hero-kicker">Psychology-First Food Intelligence</p>
+          <h1>The AI that understands <em>why</em> you eat what you eat</h1>
+          <p class="hero-subtitle">
+            FoodDNA builds behavioral profiles from Swiggy signals — cultural identity, emotional patterns, habit loops, life stage. Not just what you like, but why you eat it, when, and how it connects to who you are.
+          </p>
+          <div class="hero-actions">
+            <a href="#demo" class="btn btn-primary">Try the Live Demo</a>
+            <a href="#research" class="btn btn-secondary">Read the Research</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><div class="num" data-count="10">0</div><div class="label">Dimensions</div></div>
+            <div class="hero-stat"><div class="num" data-count="5">0</div><div class="label">Profiles</div></div>
+            <div class="hero-stat"><div class="num" data-count="3">0</div><div class="label">MCP Servers</div></div>
+            <div class="hero-stat"><div class="num" data-count="6">0</div><div class="label">Frameworks</div></div>
+          </div>
+        </div>
+        <div class="dna-canvas-wrap reveal">
+          <canvas id="dna-canvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PIPELINE ═══ -->
+  <section class="pipeline" id="pipeline">
+    <div class="container">
+      <div class="reveal">
+        <p class="kicker">How It Works</p>
+        <h2 style="font-size:clamp(28px,3.5vw,40px);margin-top:8px">From signals to psychology</h2>
+        <p style="font-size:17px;color:var(--muted);max-width:560px;margin-top:8px">Three steps from raw Swiggy data to personalized food intelligence.</p>
+      </div>
+      <div class="pipeline-track reveal">
+        <div class="pipeline-step">
+          <div class="pipeline-num">01</div>
+          <h3>Signal</h3>
+          <p>Swiggy's 3 MCP servers send behavioral signals — food orders, grocery patterns, dining bookings, addresses. Every action reveals something about who you are.</p>
+          <div class="pipeline-connector">&#8594;</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">02</div>
+          <h3>Analyze</h3>
+          <p>FoodDNA extracts 10 psychological dimensions using behavioral science frameworks — Habit Loop, Stages of Change, Identity Theory, Behavioral Economics.</p>
+          <div class="pipeline-connector">&#8594;</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">03</div>
+          <h3>Recommend</h3>
+          <p>Personalized suggestions that respect your identity, habits, and emotional state. Never push healthy food on a stressed user. Never override dietary identity.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ LIVE DEMO ═══ -->
+  <section class="demo-section" id="demo">
+    <div class="container">
+      <div class="demo-header reveal">
+        <p class="kicker">Live Demo</p>
+        <h2>See FoodDNA in action</h2>
+        <p>Select a profile and start a conversation. Watch the Food DNA sidebar update in real-time.</p>
+      </div>
+      <div class="demo-layout reveal">
+        <div class="chat-panel">
+          <div class="profile-bar" id="profile-bar"></div>
+          <div class="chat-messages" id="messages">
+            <div class="msg msg-system">Select a profile above to start exploring.</div>
+          </div>
+          <div class="chat-input-area">
+            <div class="suggestions" id="suggestions"></div>
+            <div class="input-row">
+              <input type="text" id="chat-input" placeholder="Ask FoodDNA anything..." onkeydown="if(event.key==='Enter')sendMessage()">
+              <button id="send-btn" onclick="sendMessage()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="dna-sidebar" id="dna-sidebar">
+          <div class="dna-placeholder" id="dna-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round"><path d="M12 2v20M4 6c4 0 4 4 8 4s4-4 8-4M4 18c4 0 4-4 8-4s4 4 8 4M4 12h16"/></svg>
+            <p><strong>Food DNA will appear here</strong><br>Select a profile to see their behavioral dimensions, habits, and emotional patterns.</p>
+          </div>
+          <div id="dna-content" style="display:none">
+            <div class="dna-profile-header">
+              <div class="dna-avatar" id="sidebar-avatar"></div>
+              <div class="dna-name" id="sidebar-name"></div>
+              <div class="dna-tagline" id="sidebar-tagline"></div>
+            </div>
+            <div id="dna-dimensions"></div>
+            <div class="dna-section">
+              <div class="dna-section-title">Top Cuisines</div>
+              <div id="dna-cuisines"></div>
+            </div>
+            <div class="dna-section">
+              <div class="dna-section-title">Habitual Items</div>
+              <div id="dna-habits"></div>
+            </div>
+            <div class="dna-section">
+              <div class="dna-section-title">Emotional Profile</div>
+              <div id="dna-emotions"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PROFILES ═══ -->
+  <section id="profiles">
+    <div class="container">
+      <div class="reveal">
+        <p class="kicker">The Profiles</p>
+        <h2 style="font-size:clamp(28px,3.5vw,40px);margin-top:8px">Five diverse Indian food psychologies</h2>
+        <p style="font-size:17px;color:var(--muted);max-width:600px;margin-top:8px">Each profile represents a different life stage, region, dietary identity, and emotional pattern.</p>
+      </div>
+      <div class="profiles-grid reveal" id="profiles-grid"></div>
+    </div>
+  </section>
+
+  <!-- ═══ WHY DIFFERENT ═══ -->
+  <section class="why-section" id="research">
+    <div class="container">
+      <div class="reveal">
+        <p class="kicker">Why This Is Different</p>
+        <h2 style="font-size:clamp(28px,3.5vw,40px);margin-top:8px">Built by a Psychology Master's graduate</h2>
+      </div>
+      <div class="why-grid reveal">
+        <div>
+          <h3 class="why-heading">Not another recommendation engine. A behavioral intelligence system.</h3>
+          <p class="why-subtitle">
+            Most food AI models treat food as data — collaborative filtering, content-based matching, price optimization. FoodDNA models food as <strong>psychology</strong>: identity, habit, emotion, culture, social dynamics, and life context.
+          </p>
+          <p class="why-subtitle" style="margin-top:16px">
+            The difference? A traditional system says "users like you ordered biryani." FoodDNA says "You have a Friday celebration habit loop — biryani is the routine that satisfies your weekend reward-seeking. If unavailable, you want something equally indulgent, not a salad."
+          </p>
+        </div>
+        <div class="frameworks-grid">
+          <div class="framework-card"><h4>Habit Loop</h4><p>Cue, Routine, Reward. We detect your food habits from ordering patterns.</p></div>
+          <div class="framework-card"><h4>Stages of Change</h4><p>Never push health on someone not ready. We detect your readiness stage.</p></div>
+          <div class="framework-card"><h4>Self-Determination</h4><p>Autonomy, not commands. Nudge, not force. You choose, we suggest.</p></div>
+          <div class="framework-card"><h4>Identity Theory</h4><p>Dietary identity is non-negotiable. A Jain stays Jain. Always.</p></div>
+          <div class="framework-card"><h4>Behavioral Economics</h4><p>Show savings, not discounts. Frame value, not cheap. Anchor with original price.</p></div>
+          <div class="framework-card"><h4>Cultural Psychology</h4><p>Friday biryani. Rain pakora. Festival sweets. Indian food is identity.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CTA ═══ -->
+  <section class="cta-section" id="cta">
+    <div class="container">
+      <div class="reveal">
+        <h2>Ready to see your Food DNA?</h2>
+        <p class="subtitle">Connect your Swiggy account or explore with demo profiles.</p>
+        <div class="cta-actions">
+          <a href="#demo" class="btn btn-primary">Try Live Demo</a>
+          <a href="https://mcp.swiggy.com/builders/access/" class="btn btn-secondary" target="_blank" rel="noopener">Apply on Swiggy Builders Club</a>
+        </div>
+        <div class="cta-stats">
+          <div class="cta-stat"><div class="num">5</div><div class="label">Demo Profiles</div></div>
+          <div class="cta-stat"><div class="num">10</div><div class="label">Dimensions</div></div>
+          <div class="cta-stat"><div class="num">3</div><div class="label">MCP Servers</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="footer">
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <span>FoodDNA Agent &middot; Built for Swiggy Builders Club</span>
+      <div class="footer-links">
+        <a href="https://github.com/demo84431-ship-it/swigy-builders" target="_blank" rel="noopener">GitHub</a>
+        <a href="#research">Research</a>
+        <a href="https://mcp.swiggy.com/builders/access/" target="_blank" rel="noopener">Apply</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       JAVASCRIPT
+       ═══════════════════════════════════════════════════════════════ -->
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════════════════════
+    let activeProfileId = null;
+    let activeProfileData = null;
+    let allProfiles = [];
+
+    // ═══════════════════════════════════════════════════════════════
+    // DNA HELIX CANVAS
+    // ═══════════════════════════════════════════════════════════════
+    function initDNACanvas() {
+      const canvas = document.getElementById('dna-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      let w, h, t = 0;
+
+      const NODES = [
+        { label: 'Dietary Identity', color: '#2F5B4F' },
+        { label: 'Regional Culture', color: '#C0512F' },
+        { label: 'Temporal Rhythm', color: '#4A7FB5' },
+        { label: 'Emotional Patterns', color: '#D4880F' },
+        { label: 'Habit Loops', color: '#7B61A8' },
+        { label: 'Health Orientation', color: '#2F5B4F' },
+        { label: 'Social Dynamics', color: '#C0512F' },
+        { label: 'Price Psychology', color: '#4A7FB5' },
+        { label: 'Life Stage', color: '#D4880F' },
+        { label: 'Cuisine Preferences', color: '#7B61A8' },
+      ];
+
+      function resize() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        w = rect.width; h = rect.height;
+        canvas.width = w * dpr; canvas.height = h * dpr;
+        canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      function draw() {
+        ctx.clearRect(0, 0, w, h);
+        const cx = w / 2;
+        const cy = h / 2;
+        const amplitude = Math.min(w, h) * 0.25;
+        const spacing = h / (NODES.length + 1);
+        const radius = 6;
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+        // Draw strands
+        ctx.lineWidth = 2;
+        for (let strand = 0; strand < 2; strand++) {
+          ctx.beginPath();
+          ctx.strokeStyle = strand === 0
+            ? (isDark ? 'rgba(224,122,95,0.3)' : 'rgba(192,81,47,0.2)')
+            : (isDark ? 'rgba(95,175,138,0.3)' : 'rgba(47,91,79,0.2)');
+          for (let i = 0; i <= 100; i++) {
+            const progress = i / 100;
+            const y = progress * h;
+            const phase = strand === 0 ? t : t + Math.PI;
+            const x = cx + Math.sin(progress * Math.PI * 3 + phase) * amplitude;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+
+        // Draw nodes
+        NODES.forEach((node, i) => {
+          const progress = (i + 1) / (NODES.length + 1);
+          const y = progress * h;
+          const phase1 = t + i * 0.6;
+          const phase2 = t + Math.PI + i * 0.6;
+          const x1 = cx + Math.sin(progress * Math.PI * 3 + phase1) * amplitude;
+          const x2 = cx + Math.sin(progress * Math.PI * 3 + phase2) * amplitude;
+
+          // Connection line
+          ctx.beginPath();
+          ctx.strokeStyle = isDark ? 'rgba(240,235,227,0.06)' : 'rgba(28,26,23,0.06)';
+          ctx.lineWidth = 1;
+          ctx.moveTo(x1, y); ctx.lineTo(x2, y);
+          ctx.stroke();
+
+          // Node 1
+          ctx.beginPath();
+          ctx.arc(x1, y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = node.color;
+          ctx.fill();
+          ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // Node 2
+          ctx.beginPath();
+          ctx.arc(x2, y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = node.color;
+          ctx.globalAlpha = 0.4;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+
+          // Label
+          ctx.font = `500 11px ${getComputedStyle(document.body).getPropertyValue('--font-body')}`;
+          ctx.fillStyle = isDark ? 'rgba(240,235,227,0.5)' : 'rgba(28,26,23,0.4)';
+          ctx.textAlign = 'left';
+          ctx.fillText(node.label, x1 + 16, y + 4);
+        });
+
+        t += 0.008;
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PROFILE INSIGHTS
+    // ═══════════════════════════════════════════════════════════════
+    const PROFILE_INSIGHTS = {
+      arjun: [
+        '<strong>Friday biryani habit</strong> — 4 consecutive Fridays detected',
+        '<strong>72% habitual</strong> — strong routines, low variety-seeking',
+        '<strong>Comfort food = curd rice</strong> — stress indicator'
+      ],
+      priya: [
+        '<strong>Family orders for 5</strong> — joint family, mixed dietary household',
+        '<strong>Sunday lunch ritual</strong> — 75% strength habit loop',
+        '<strong>Hosts guests often</strong> — 35% hospitality frequency'
+      ],
+      riya: [
+        '<strong>Late-night study fuel</strong> — 35% orders after 10 PM',
+        '<strong>Budget hunter</strong> — 70% coupon usage, Rs.180 AOV',
+        '<strong>Egg roll = hostel comfort</strong> — 14 orders this month'
+      ],
+      karthik: [
+        '<strong>Orders for parents in Chennai</strong> — NRI remote ordering',
+        '<strong>Festival sweets tradition</strong> — 90% habit strength on festivals',
+        '<strong>12,000 km away</strong> — multi-address, timezone-aware'
+      ],
+      shah: [
+        '<strong>Jain strict</strong> — no onion, no garlic, no root vegetables',
+        '<strong>Diabetic wife</strong> — medical dietary filtering active',
+        '<strong>Morning thepla ritual</strong> — 95% breakfast regularity'
+      ]
+    };
+
+    const DIMENSION_TOOLTIPS = {
+      dietary: 'Your fundamental dietary classification. Non-negotiable — a Jain stays Jain.',
+      regional: 'Geographic and cultural food identity. Changes over years, not weeks.',
+      temporal: 'When you order and how often. Tracks meal timing and day-of-week patterns.',
+      price: 'How you perceive and respond to price. Budget tier, coupon sensitivity, value framing.',
+      health: 'Your relationship with health and nutrition. Detects your readiness for change.',
+      social: 'Whether you eat alone, with family, or host guests. The decision unit.',
+      emotional: 'How emotions influence food choices. Never push health on a stressed user.',
+      life: 'Your living situation and life context. A student differs from a professional.',
+      habit: 'Strength of recurring patterns. Habit loops: Cue, Routine, Reward.',
+      cuisine: 'Granular preferences beyond regional identity. Comfort vs exploration balance.'
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // PROFILE LOADING
+    // ═══════════════════════════════════════════════════════════════
+    async function loadProfiles() {
+      try {
+        const res = await fetch('/api/profiles');
+        const data = await res.json();
+        allProfiles = data.profiles;
+        renderProfileBar(data.profiles);
+        renderProfileCards(data.profiles);
+      } catch (err) {
+        console.error('Failed to load profiles:', err);
+      }
+    }
+
+    function renderProfileBar(profiles) {
+      const bar = document.getElementById('profile-bar');
+      bar.innerHTML = profiles.map(p =>
+        `<button class="profile-pill" data-id="${p.id}" onclick="selectProfile('${p.id}')">${p.avatar} ${p.name}</button>`
+      ).join('');
+    }
+
+    function renderProfileCards(profiles) {
+      const grid = document.getElementById('profiles-grid');
+      grid.innerHTML = profiles.map(p => {
+        const insights = PROFILE_INSIGHTS[p.id] || [];
+        return `
+          <div class="profile-card" onclick="selectProfile('${p.id}');document.getElementById('demo').scrollIntoView({behavior:'smooth'})">
+            <div class="p-avatar">${p.avatar}</div>
+            <div class="p-name">${p.name}</div>
+            <div class="p-meta">${p.age} · ${p.city} · ${p.dietary.replace(/_/g,' ')}</div>
+            <div class="p-insights">
+              ${insights.map(i => `<div class="p-insight">${i}</div>`).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function selectProfile(profileId) {
+      document.querySelectorAll('.profile-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.id === profileId);
+      });
+
+      try {
+        const res = await fetch('/api/select-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile_id: profileId, session_id: 'default' }),
+        });
+        const data = await res.json();
+        activeProfileId = profileId;
+        activeProfileData = data.dna;
+
+        const messages = document.getElementById('messages');
+        messages.innerHTML = `
+          <div class="msg msg-system visible">Profile: ${data.profile.name} — ${data.profile.tagline}</div>
+          <div class="msg msg-agent visible"><strong>Welcome, ${data.profile.name}!</strong><br><br>I know your food psychology. Try asking me something, or pick a suggestion below.</div>
+        `;
+
+        updateSidebar(data.profile, data.dna);
+        updateSuggestions('default');
+      } catch (err) {
+        console.error('Failed to select profile:', err);
+      }
+    }
+
+    function updateSidebar(profile, dna) {
+      document.getElementById('dna-placeholder').style.display = 'none';
+      const content = document.getElementById('dna-content');
+      content.style.display = 'block';
+      document.getElementById('sidebar-avatar').textContent = profile.avatar;
+      document.getElementById('sidebar-name').textContent = `${profile.name}, ${profile.age}`;
+      document.getElementById('sidebar-tagline').textContent = `${profile.tagline} · ${profile.city}`;
+
+      const d = dna.dietary_identity || {};
+      const r = dna.regional_identity || {};
+      const t = dna.temporal_pattern || {};
+      const pp = dna.price_psychology || {};
+      const h = dna.health_orientation || {};
+      const s = dna.social_dynamics || {};
+      const e = dna.emotional_patterns || {};
+      const ls = dna.life_stage || {};
+      const hp = dna.habit_profile || {};
+
+      const dimData = [
+        { key: 'dietary', label: 'Dietary Identity', value: (d.primary || '—').replace(/_/g,' '), pct: (d.strictness || 0) * 100, color: 'var(--dim-dietary)' },
+        { key: 'regional', label: 'Regional Identity', value: (r.region || '—').replace(/_/g,' '), pct: 50, color: 'var(--dim-regional)' },
+        { key: 'temporal', label: 'Order Frequency', value: `${(t.order_interval_days || 0).toFixed(1)} days apart`, pct: Math.min(100, (1 / (t.order_interval_days || 3)) * 100), color: 'var(--dim-temporal)' },
+        { key: 'price', label: 'Budget Tier', value: (pp.budget_tier || '—').replace(/_/g,' '), pct: ({budget:20,value:40,moderate:60,comfortable:80,premium:100})[pp.budget_tier] || 50, color: 'var(--dim-emotional)' },
+        { key: 'health', label: 'Health Awareness', value: `${Math.round((h.health_awareness || 0) * 100)}%`, pct: (h.health_awareness || 0) * 100, color: 'var(--dim-dietary)' },
+        { key: 'social', label: 'Social Context', value: (s.primary_social_context || '—').replace(/_/g,' '), pct: (s.family_ratio || 0) * 100, color: 'var(--dim-regional)' },
+        { key: 'life', label: 'Life Stage', value: (ls.life_stage || '—').replace(/_/g,' '), pct: (ls.confidence || 0) * 100, color: 'var(--dim-temporal)' },
+        { key: 'habit', label: 'Habit Strength', value: `${Math.round((hp.overall_habit_strength || 0) * 100)}%`, pct: (hp.overall_habit_strength || 0) * 100, color: 'var(--dim-habit)' },
+      ];
+
+      const dimsContainer = document.getElementById('dna-dimensions');
+      dimsContainer.innerHTML = dimData.map(d => `
+        <div class="dna-dimension">
+          <div class="dna-dim-label">
+            <span class="dim-dot" style="background:${d.color}"></span>
+            ${d.label}
+            <span class="tooltip">${DIMENSION_TOOLTIPS[d.key] || ''}</span>
+          </div>
+          <div class="dna-dim-value">${d.value}</div>
+          <div class="dna-dim-bar"><div class="dna-dim-fill" data-pct="${d.pct}" style="background:${d.color}"></div></div>
+        </div>
+      `).join('');
+
+      // Animate bars in
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.dna-dim-fill').forEach(bar => {
+          bar.style.width = bar.dataset.pct + '%';
+        });
+      });
+
+      const cuisines = dna.cuisine_preferences || {};
+      const sorted = Object.entries(cuisines).sort((a,b) => b[1]-a[1]).slice(0,5);
+      document.getElementById('dna-cuisines').innerHTML = sorted.map(([name, val]) =>
+        `<div class="dna-item"><span class="name">${name.replace(/_/g,' ')}</span><span class="count">${Math.round(val*100)}%</span></div>`
+      ).join('') || '<div style="color:var(--muted);font-size:13px">Building...</div>';
+
+      const items = hp.recurring_items || [];
+      document.getElementById('dna-habits').innerHTML = items.slice(0,5).map(item =>
+        `<div class="dna-item"><span class="name">${item.item || ''}</span><span class="count">${item.orders || ''} orders</span></div>`
+      ).join('') || '<div style="color:var(--muted);font-size:13px">Building...</div>';
+
+      const comfort = (e.comfort_foods || []);
+      document.getElementById('dna-emotions').innerHTML = comfort.length ?
+        `<div style="font-size:13px"><strong>Comfort:</strong> ${comfort.join(', ')}</div>` :
+        '<div style="color:var(--muted);font-size:13px">Learning...</div>';
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CHAT
+    // ═══════════════════════════════════════════════════════════════
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = '';
+
+      addMessage('user', message);
+      showTyping();
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, session_id: 'default' }),
+        });
+        hideTyping();
+        const data = await res.json();
+        addMessage('agent', data.reply);
+        updateSuggestions(message);
+      } catch (err) {
+        hideTyping();
+        addMessage('agent', 'Something went wrong. Please try again.');
+      }
+    }
+
+    function sendSuggestion(text) {
+      document.getElementById('chat-input').value = text;
+      sendMessage();
+    }
+
+    function addMessage(type, text) {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = `msg msg-${type}`;
+      div.innerHTML = text;
+      messages.appendChild(div);
+      // Trigger animation
+      requestAnimationFrame(() => div.classList.add('visible'));
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function showTyping() {
+      const messages = document.getElementById('messages');
+      const div = document.createElement('div');
+      div.className = 'typing'; div.id = 'typing-indicator';
+      div.innerHTML = '<span></span><span></span><span></span>';
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function hideTyping() {
+      const el = document.getElementById('typing-indicator');
+      if (el) el.remove();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SUGGESTIONS
+    // ═══════════════════════════════════════════════════════════════
+    const SUGGESTION_SETS = {
+      default: ['Order my usual', "It's Friday", 'Plan my evening', 'Something healthy', 'Surprise me'],
+      after_order: ['Order something else', 'Plan my evening', 'Something healthy'],
+      after_healthy: ['Order my usual', 'Surprise me', "It's Friday"],
+      after_surprise: ['Order my usual', 'Something healthy', 'Plan my evening'],
+      after_festival: ['Order my usual', 'Something healthy', 'Surprise me'],
+      after_evening: ['Order my usual', 'Something healthy', 'Surprise me'],
+    };
+
+    function updateSuggestions(lastMessage) {
+      const msg = (lastMessage || '').toLowerCase();
+      let key = 'default';
+      if (msg.includes('order') || msg.includes('usual')) key = 'after_order';
+      else if (msg.includes('healthy')) key = 'after_healthy';
+      else if (msg.includes('surprise') || msg.includes('different')) key = 'after_surprise';
+      else if (msg.includes('diwali') || msg.includes('holi') || msg.includes('festival')) key = 'after_festival';
+      else if (msg.includes('evening') || msg.includes('plan')) key = 'after_evening';
+
+      const container = document.getElementById('suggestions');
+      container.innerHTML = (SUGGESTION_SETS[key] || SUGGESTION_SETS.default).map(s =>
+        `<button class="suggestion" onclick="sendSuggestion('${s}')">${s}</button>`
+      ).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // THEME
+    // ═══════════════════════════════════════════════════════════════
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      localStorage.setItem('fooddna-theme', isDark ? 'light' : 'dark');
+      const btn = document.getElementById('theme-toggle');
+      btn.innerHTML = isDark
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    }
+
+    // Restore theme
+    (function() {
+      const saved = localStorage.getItem('fooddna-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        const btn = document.getElementById('theme-toggle');
+        if (btn) btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      }
+    })();
+
+    // ═══════════════════════════════════════════════════════════════
+    // SCROLL ANIMATIONS (GSAP)
+    // ═══════════════════════════════════════════════════════════════
+    function initScrollAnimations() {
+      gsap.registerPlugin(ScrollTrigger);
+
+      // Header scroll effect
+      ScrollTrigger.create({
+        start: 'top -80',
+        onUpdate: (self) => {
+          document.getElementById('header').classList.toggle('scrolled', self.progress > 0);
+        }
+      });
+
+      // Reveal elements
+      gsap.utils.toArray('.reveal').forEach((el, i) => {
+        gsap.to(el, {
+          opacity: 1, y: 0, duration: 0.8,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 85%',
+            toggleActions: 'play none none none'
+          },
+          delay: i % 3 * 0.1
+        });
+      });
+
+      // Counter animation
+      document.querySelectorAll('[data-count]').forEach(el => {
+        const target = parseInt(el.dataset.count);
+        gsap.to(el, {
+          innerText: target,
+          duration: 1.5,
+          ease: 'power2.out',
+          snap: { innerText: 1 },
+          scrollTrigger: { trigger: el, start: 'top 90%' }
+        });
+      });
+
+      // Pipeline step stagger
+      gsap.utils.toArray('.pipeline-step').forEach((step, i) => {
+        gsap.from(step, {
+          opacity: 0, x: -30,
+          duration: 0.6, delay: i * 0.15,
+          ease: 'power2.out',
+          scrollTrigger: { trigger: step, start: 'top 85%' }
+        });
+      });
+
+      // Profile card stagger
+      gsap.utils.toArray('.profile-card').forEach((card, i) => {
+        gsap.from(card, {
+          opacity: 0, y: 30, scale: 0.95,
+          duration: 0.5, delay: i * 0.08,
+          ease: 'back.out(1.2)',
+          scrollTrigger: { trigger: card, start: 'top 90%' }
+        });
+      });
+
+      // Framework card stagger
+      gsap.utils.toArray('.framework-card').forEach((card, i) => {
+        gsap.from(card, {
+          opacity: 0, y: 20,
+          duration: 0.4, delay: i * 0.06,
+          ease: 'power2.out',
+          scrollTrigger: { trigger: card, start: 'top 90%' }
+        });
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SMOOTH SCROLL
+    // ═══════════════════════════════════════════════════════════════
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+      initDNACanvas();
+      initScrollAnimations();
+      loadProfiles();
+    });
+  </script>
+</body>
+</html>
