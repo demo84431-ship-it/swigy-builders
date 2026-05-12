@@ -551,6 +551,83 @@
       40% { transform: scale(1); opacity: 1; }
     }
 
+    /* ═══ Cart Badge ═══ */
+    .cart-badge {
+      display: none; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: var(--radius-pill);
+      background: var(--accent); color: #FFF;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cart-badge:hover { background: var(--accent-hover); transform: scale(1.05); }
+    .cart-badge .badge-count {
+      background: #FFF; color: var(--accent); width: 18px; height: 18px;
+      border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+    }
+    .cart-badge.visible { display: inline-flex; }
+
+    /* ═══ Skip / No Thanks ═══ */
+    .skip-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 6px 14px; border-radius: var(--radius-pill);
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); font-size: 12px; cursor: pointer;
+      transition: all 0.2s; font-family: var(--font-body); margin-top: 8px;
+    }
+    .skip-btn:hover { border-color: var(--muted); color: var(--ink); }
+
+    /* ═══ Instamart Running Total ═══ */
+    .instamart-total {
+      display: none; margin-top: 8px; padding: 8px 12px;
+      background: rgba(47,91,79,0.06); border: 1px solid rgba(47,91,79,0.15);
+      border-radius: 8px; font-size: 12px;
+    }
+    .instamart-total.visible { display: block; }
+    .instamart-total .total-row {
+      display: flex; justify-content: space-between; padding: 2px 0;
+    }
+    .instamart-total .total-row.grand {
+      font-weight: 700; color: var(--forest); border-top: 1px solid rgba(47,91,79,0.15);
+      padding-top: 6px; margin-top: 4px;
+    }
+
+    /* ═══ View Cart FAB ═══ */
+    .view-cart-fab {
+      display: none; position: fixed; bottom: 24px; right: 24px;
+      z-index: 25; padding: 12px 20px; border-radius: var(--radius-pill);
+      background: var(--accent); color: #FFF; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(192,81,47,0.3);
+      transition: all 0.2s; font-family: var(--font-body);
+      align-items: center; gap: 8px;
+    }
+    .view-cart-fab:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(192,81,47,0.4); }
+    .view-cart-fab.visible { display: inline-flex; }
+
+    /* ═══ Track Order ═══ */
+    .track-card {
+      margin-top: 8px; padding: 14px; background: var(--surface-warm);
+      border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    .track-step {
+      display: flex; align-items: center; gap: 10px; padding: 8px 0;
+      font-size: 13px;
+    }
+    .track-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid var(--border-strong);
+    }
+    .track-step.done .track-dot { background: var(--forest); border-color: var(--forest); }
+    .track-step.active .track-dot { background: var(--accent); border-color: var(--accent); animation: trackPulse 1.5s infinite; }
+    .track-label { color: var(--ink-soft); }
+    .track-step.done .track-label { color: var(--ink); font-weight: 500; }
+    .track-step.active .track-label { color: var(--accent); font-weight: 600; }
+    @keyframes trackPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(192,81,47,0.4); }
+      50% { box-shadow: 0 0 0 4px rgba(192,81,47,0); }
+    }
+
     /* ═══════════════════════════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════════════════════════ */
@@ -610,6 +687,9 @@
         <span class="topbar-title">Live Demo</span>
       </div>
       <div class="topbar-right">
+        <div class="cart-badge" id="cart-badge" onclick="showCartFromBadge()" title="View cart">
+          🛒 <span class="badge-count" id="cart-badge-count">0</span>
+        </div>
         <a href="/" class="topbar-link">Back to Home</a>
         <button class="topbar-btn" onclick="toggleTheme()" title="Toggle theme" id="theme-btn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
@@ -941,6 +1021,43 @@
         return true;
       }
 
+      // Track order scenario
+      if (msg.includes('track') || msg.includes('where is my order') || msg.includes('delivery status')) {
+        showTyping();
+        setTimeout(() => {
+          hideTyping();
+          showTrackingCard();
+        }, 700);
+        return true;
+      }
+
+      // Cart-related: intercept to prevent server conflict
+      if (msg.includes('add to cart') || msg.includes('add biryani') || msg.includes('order biryani')) {
+        if (cartState.items.length === 0) {
+          // No items in cart — add a default biryani
+          addToCart('Chicken Biryani', '₹280', 'Meghana Foods', 0);
+        } else {
+          showCartFromBadge();
+        }
+        return true;
+      }
+
+      // View cart
+      if (msg.includes('view cart') || msg.includes('show cart') || msg.includes('my cart')) {
+        if (cartState.items.length > 0) {
+          showCartFromBadge();
+        } else {
+          addMessage('agent', '🛒 Your cart is empty. Search for a dish or try "Order my usual" to get started!');
+        }
+        return true;
+      }
+
+      // Clear cart
+      if (msg.includes('clear cart') || msg.includes('empty cart')) {
+        cancelOrder();
+        return true;
+      }
+
       return false;
     }
 
@@ -1054,6 +1171,9 @@
       cartState.subtotal = cartState.items.reduce((sum, i) => sum + i.price * i.qty, 0);
       cartState.total = cartState.subtotal + cartState.deliveryFee;
 
+      // Update cart badge
+      updateCartBadge();
+
       // Show "Adding to cart..." animation
       addMessage('user', `Order ${itemName}`);
       const loadingMsg = document.createElement('div');
@@ -1141,32 +1261,134 @@
 
         // Reset cart
         cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0 };
+        updateCartBadge();
         updateSuggestions('order');
       }, 800);
     }
 
     function cancelOrder() {
       cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0 };
+      updateCartBadge();
       addMessage('agent', 'Order cancelled. Your cart is now empty. Let me know if you want to try something else!');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CART BADGE & VIEW CART
+    // ═══════════════════════════════════════════════════════════════
+    function updateCartBadge() {
+      const badge = document.getElementById('cart-badge');
+      const count = document.getElementById('cart-badge-count');
+      const totalItems = cartState.items.reduce((s, i) => s + i.qty, 0);
+      if (totalItems > 0) {
+        badge.classList.add('visible');
+        count.textContent = totalItems;
+      } else {
+        badge.classList.remove('visible');
+      }
+    }
+
+    function showCartFromBadge() {
+      if (cartState.items.length === 0) return;
+      // Show cart as a chat message
+      const grouped = {};
+      cartState.items.forEach(i => {
+        if (grouped[i.name]) { grouped[i.name].qty++; }
+        else { grouped[i.name] = { ...i }; }
+      });
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg msg-agent';
+      msgDiv.innerHTML = `
+        <strong>🛒 Your Cart</strong>
+        <div class="cart-card animate-in">
+          <div class="cart-card-header">
+            <span class="icon">🛍️</span>
+            <span class="title">${cartState.items.length} item${cartState.items.length > 1 ? 's' : ''} from ${cartState.items[0].restaurant}</span>
+          </div>
+          <div class="cart-card-body">
+            ${Object.values(grouped).map(i => `
+              <div class="cart-item">
+                <span class="name">${i.name} ${i.qty > 1 ? '×' + i.qty : ''}</span>
+                <span class="price">₹${i.price * i.qty}</span>
+              </div>
+            `).join('')}
+            <div class="cart-totals">
+              <div class="cart-total"><span>Subtotal</span><span>₹${cartState.subtotal}</span></div>
+              <div class="cart-total"><span>Delivery fee</span><span>₹${cartState.deliveryFee}</span></div>
+              <div class="cart-total grand"><span>Total</span><span>₹${cartState.total}</span></div>
+            </div>
+          </div>
+          <div class="cart-card-actions">
+            <button class="action-btn primary" onclick="confirmOrder()">Confirm Order</button>
+            <button class="action-btn" onclick="cancelOrder()">Clear Cart</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('messages').appendChild(msgDiv);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TRACK ORDER
+    // ═══════════════════════════════════════════════════════════════
+    function showTrackingCard() {
+      const orderId = 'FDNA-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg msg-agent';
+      msgDiv.innerHTML = `
+        <strong>📍 Order Tracking</strong>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Order ${orderId}</p>
+        <div class="track-card animate-in">
+          <div class="track-step done">
+            <span class="track-dot"></span>
+            <span class="track-label">Order confirmed</span>
+          </div>
+          <div class="track-step done">
+            <span class="track-dot"></span>
+            <span class="track-label">Restaurant preparing your food</span>
+          </div>
+          <div class="track-step active">
+            <span class="track-dot"></span>
+            <span class="track-label">Rider picked up — arriving in 12 min</span>
+          </div>
+          <div class="track-step">
+            <span class="track-dot"></span>
+            <span class="track-label">Delivered</span>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:var(--muted)">🛵 Rider: Rahul · ⭐ 4.8 · Live tracking available in Swiggy app</div>
+      `;
+      document.getElementById('messages').appendChild(msgDiv);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
     }
 
     // ═══════════════════════════════════════════════════════════════
     // INSTAMART CROSS-SELL
     // ═══════════════════════════════════════════════════════════════
+    let instamartCart = [];
+    const INSTAMART_ITEMS = {
+      '🥛 Milk': 56, '🍞 Bread': 45, '🥚 Eggs': 80, '🧈 Butter': 55, '🍌 Bananas': 40
+    };
+
     function showInstamartSuggestion() {
       instamartShown = true;
+      instamartCart = [];
       const msgDiv = document.createElement('div');
       msgDiv.className = 'msg msg-agent';
+      msgDiv.id = 'instamart-msg';
       msgDiv.innerHTML = `
         <div class="instamart-suggest animate-in">
           <div class="title">🛒 Add from Instamart?</div>
           <span style="font-size:12px;color:var(--muted)">Since you're ordering, need anything from the store?</span>
-          <div class="instamart-items">
-            <button class="instamart-item" onclick="instamartAdd(this, '🥛 Milk', '₹56')">🥛 Milk (₹56)</button>
-            <button class="instamart-item" onclick="instamartAdd(this, '🍞 Bread', '₹45')">🍞 Bread (₹45)</button>
-            <button class="instamart-item" onclick="instamartAdd(this, '🥚 Eggs', '₹80')">🥚 Eggs (₹80)</button>
-            <button class="instamart-item" onclick="instamartAdd(this, '🧈 Butter', '₹55')">🧈 Butter (₹55)</button>
-            <button class="instamart-item" onclick="instamartAdd(this, '🍌 Bananas', '₹40')">🍌 Bananas (₹40)</button>
+          <div class="instamart-items" id="instamart-items">
+            ${Object.entries(INSTAMART_ITEMS).map(([name, price]) =>
+              `<button class="instamart-item" onclick="instamartAdd(this, '${name}', ${price})">${name} (₹${price})</button>`
+            ).join('')}
+          </div>
+          <div class="instamart-total" id="instamart-total"></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+            <button class="action-btn primary" id="instamart-checkout-btn" style="display:none;font-size:11px;padding:6px 14px" onclick="instamartCheckout()">🛒 Checkout Instamart</button>
+            <button class="skip-btn" onclick="skipInstamart()">No thanks, skip →</button>
           </div>
         </div>
       `;
@@ -1178,15 +1400,56 @@
       btn.style.borderColor = 'var(--forest)';
       btn.style.color = 'var(--forest)';
       btn.style.background = 'rgba(47,91,79,0.1)';
-      btn.textContent = '✓ Added';
+      btn.textContent = '✓ ' + name.replace(/[^\w\s]/g, '').trim();
       btn.disabled = true;
 
-      // Show small confirmation
-      const confirmDiv = document.createElement('div');
-      confirmDiv.className = 'msg msg-system';
-      confirmDiv.textContent = `${name} added to your Instamart cart (${price})`;
-      document.getElementById('messages').appendChild(confirmDiv);
+      instamartCart.push({ name, price });
+
+      // Update running total
+      const totalDiv = document.getElementById('instamart-total');
+      const subtotal = instamartCart.reduce((s, i) => s + i.price, 0);
+      totalDiv.classList.add('visible');
+      totalDiv.innerHTML = `
+        ${instamartCart.map(i => `<div class="total-row"><span>${i.name}</span><span>₹${i.price}</span></div>`).join('')}
+        <div class="total-row grand"><span>Instamart Total (${instamartCart.length} items)</span><span>₹${subtotal}</span></div>
+      `;
+
+      // Show checkout button
+      document.getElementById('instamart-checkout-btn').style.display = 'inline-flex';
+
+      // Scroll
       document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    }
+
+    function instamartCheckout() {
+      const subtotal = instamartCart.reduce((s, i) => s + i.price, 0);
+      addMessage('user', `Checkout Instamart (${instamartCart.length} items)`);
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'msg msg-agent';
+        msgDiv.innerHTML = `
+          <div class="order-success animate-in">
+            <div class="emoji">📦</div>
+            <h4>Instamart Order Placed!</h4>
+            <p>${instamartCart.map(i => i.name).join(', ')} — arriving in 15-20 minutes</p>
+            <span class="tracking">📦 FDNA-${Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
+          </div>
+        `;
+        document.getElementById('messages').appendChild(msgDiv);
+        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        instamartCart = [];
+        updateSuggestions('order');
+      }, 800);
+    }
+
+    function skipInstamart() {
+      // Remove the instamart message
+      const el = document.getElementById('instamart-msg');
+      if (el) el.remove();
+      addMessage('agent', 'No problem! Let me know if you need anything else. 🍽️');
+      updateSuggestions('order');
     }
 
     function sendSuggestion(text) {
@@ -1223,7 +1486,7 @@
     // ═══════════════════════════════════════════════════════════════
     const SUGGESTION_SETS = {
       default: ['Order my usual', 'Find me the best biryani', 'Any coupons or deals?', "It's Friday", 'Plan my evening', 'Something healthy', 'Surprise me'],
-      after_order: ['Find me the best biryani', 'Any coupons or deals?', 'Plan my evening', 'Something healthy'],
+      after_order: ['Track order', 'Find me the best biryani', 'Any coupons or deals?', 'Plan my evening'],
       after_healthy: ['Order my usual', 'Surprise me', "It's Friday"],
       after_surprise: ['Order my usual', 'Something healthy', 'Plan my evening'],
       after_festival: ['Order my usual', 'Something healthy', 'Surprise me'],
