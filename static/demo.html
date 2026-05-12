@@ -999,8 +999,9 @@
     // ═══════════════════════════════════════════════════════════════
     // CHAT
     // ═══════════════════════════════════════════════════════════════
-    let cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0 };
+    let cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0, coupon: null, discount: 0 };
     let instamartShown = false;
+    let orderPlaced = false;
 
     async function sendMessage() {
       const input = document.getElementById('chat-input');
@@ -1237,6 +1238,7 @@
     function showCartConfirmation(itemName, priceStr, restaurant) {
       const msgDiv = document.createElement('div');
       msgDiv.className = 'msg msg-agent';
+      msgDiv.id = 'cart-confirmation';
 
       // Group items
       const grouped = {};
@@ -1244,6 +1246,12 @@
         if (grouped[i.name]) { grouped[i.name].qty++; }
         else { grouped[i.name] = { ...i }; }
       });
+
+      const discountLine = cartState.coupon
+        ? `<div class="cart-total" style="color:var(--forest)"><span>🎟️ ${cartState.coupon.code} (${cartState.coupon.discount})</span><span>-₹${cartState.discount}</span></div>`
+        : '';
+
+      const finalTotal = cartState.total - cartState.discount;
 
       msgDiv.innerHTML = `
         <strong>🛒 Your Cart</strong>
@@ -1262,11 +1270,18 @@
             <div class="cart-totals">
               <div class="cart-total"><span>Subtotal</span><span>₹${cartState.subtotal}</span></div>
               <div class="cart-total"><span>Delivery fee</span><span>₹${cartState.deliveryFee}</span></div>
-              <div class="cart-total grand"><span>Total</span><span>₹${cartState.total}</span></div>
+              ${discountLine}
+              <div class="cart-total grand"><span>Total</span><span>₹${finalTotal}</span></div>
             </div>
           </div>
+          <div id="coupon-section" style="padding:0 16px;display:${cartState.coupon ? 'none' : 'block'}">
+            <button class="action-btn" style="width:100%;margin-bottom:12px;font-size:12px;justify-content:center" onclick="showCouponPicker()">
+              🎟️ ${cartState.coupon ? 'Change Coupon' : 'Apply Coupon'}
+            </button>
+          </div>
+          <div id="coupon-picker" style="display:none;padding:0 16px 12px"></div>
           <div class="cart-card-actions">
-            <button class="action-btn primary" onclick="confirmOrder()">Confirm Order</button>
+            <button class="action-btn primary" onclick="confirmOrder()">✅ Confirm Order (₹${finalTotal})</button>
             <button class="action-btn" onclick="cancelOrder()">Cancel</button>
           </div>
         </div>
@@ -1275,18 +1290,92 @@
       document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // COUPON PICKER (inline in cart)
+    // ═══════════════════════════════════════════════════════════════
+    const AVAILABLE_COUPONS = [
+      { code: 'WELCOME120', discount: 120, type: 'flat', desc: '₹120 off on first order', min: 299, expiry: 'Valid till 30 Jun' },
+      { code: 'SWIGGY40', discount: 100, type: 'percent', desc: '40% off up to ₹100', min: 199, expiry: 'Valid till 25 Jun' },
+      { code: 'FREEDEL', discount: 29, type: 'delivery', desc: 'Free delivery', min: 0, expiry: 'Valid for 7 days' },
+      { code: 'BIRYANI75', discount: 75, type: 'flat', desc: '₹75 off on biryani orders', min: 249, expiry: 'Expires today' },
+    ];
+
+    function showCouponPicker() {
+      const picker = document.getElementById('coupon-picker');
+      const section = document.getElementById('coupon-section');
+      if (!picker) return;
+
+      section.style.display = 'none';
+      picker.style.display = 'block';
+      picker.innerHTML = `
+        <div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:8px">Available Coupons</div>
+        ${AVAILABLE_COUPONS.map(c => {
+          const eligible = cartState.subtotal >= c.min;
+          const actualDiscount = c.type === 'percent' ? Math.min(c.discount, cartState.subtotal * 0.4) : c.discount;
+          return `
+            <div class="coupon-card animate-in" style="opacity:${eligible ? 1 : 0.5};margin-bottom:6px">
+              <div class="coupon-top">
+                <span class="coupon-discount">${c.type === 'percent' ? '40% OFF' : c.type === 'delivery' ? 'FREE DELIVERY' : '₹' + c.discount + ' OFF'}</span>
+                <span class="coupon-code">${c.code}</span>
+              </div>
+              <div class="coupon-desc">${c.desc}</div>
+              <div class="coupon-meta">
+                <span>${c.min > 0 ? 'Min order ₹' + c.min : 'No minimum'}</span>
+                <span>${c.expiry}</span>
+              </div>
+              ${eligible
+                ? `<button class="action-btn" style="margin-top:6px;font-size:11px;padding:5px 12px" onclick="applyCouponToCart('${c.code}', ${actualDiscount})">Apply</button>`
+                : `<span style="font-size:11px;color:var(--muted);margin-top:4px;display:inline-block">Need ₹${c.min - cartState.subtotal} more</span>`
+              }
+            </div>
+          `;
+        }).join('')}
+        <button class="skip-btn" onclick="closeCouponPicker()">Skip, no coupon →</button>
+      `;
+    }
+
+    function applyCouponToCart(code, discount) {
+      const coupon = AVAILABLE_COUPONS.find(c => c.code === code);
+      if (!coupon) return;
+      cartState.coupon = coupon;
+      cartState.discount = discount;
+
+      // Re-render cart with coupon applied
+      const el = document.getElementById('cart-confirmation');
+      if (el) el.remove();
+      showCartConfirmation(cartState.items[0]?.name || 'item', '₹' + cartState.items[0]?.price, cartState.items[0]?.restaurant || 'Restaurant');
+
+      // Confirmation message
+      const confirmDiv = document.createElement('div');
+      confirmDiv.className = 'msg msg-system';
+      confirmDiv.innerHTML = `🎟️ Coupon <strong>${code}</strong> applied — you save ₹${discount}!`;
+      document.getElementById('messages').appendChild(confirmDiv);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    }
+
+    function closeCouponPicker() {
+      const picker = document.getElementById('coupon-picker');
+      if (picker) picker.style.display = 'none';
+      const section = document.getElementById('coupon-section');
+      if (section) section.style.display = 'block';
+    }
+
     function confirmOrder() {
       showTyping();
+      const finalTotal = cartState.total - cartState.discount;
+      const restaurant = cartState.items[0]?.restaurant || 'Restaurant';
       setTimeout(() => {
         hideTyping();
         const orderId = 'FDNA-' + Math.random().toString(36).substr(2, 8).toUpperCase();
         const msgDiv = document.createElement('div');
         msgDiv.className = 'msg msg-agent';
+        const savingsLine = cartState.discount > 0 ? `<p style="font-size:12px;color:var(--forest);margin-bottom:4px">🎉 You saved ₹${cartState.discount} with coupon ${cartState.coupon.code}!</p>` : '';
         msgDiv.innerHTML = `
           <div class="order-success animate-in">
             <div class="emoji">🎉</div>
             <h4>Order Placed!</h4>
-            <p>Your food is being prepared and will arrive in 30-35 minutes</p>
+            ${savingsLine}
+            <p>Your food from ${restaurant} is being prepared and will arrive in 30-35 minutes</p>
             <span class="tracking">📦 ${orderId}</span>
           </div>
         `;
@@ -1303,14 +1392,14 @@
         }
 
         // Reset cart
-        cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0 };
+        cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0, coupon: null, discount: 0 };
         updateCartBadge();
         updateSuggestions('order');
       }, 800);
     }
 
     function cancelOrder() {
-      cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0 };
+      cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0, coupon: null, discount: 0 };
       updateCartBadge();
       addMessage('agent', 'Order cancelled. Your cart is now empty. Let me know if you want to try something else!');
     }
