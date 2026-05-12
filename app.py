@@ -361,7 +361,14 @@ def demo_response(message: str, profile_data: dict[str, Any] | None = None) -> s
 
 @app.get("/")
 async def root():
-    """Serve the main page."""
+    """Serve the main page (v2 with GSAP animations + dark mode)."""
+    with open("static/index-v2.html", "r") as f:
+        return HTMLResponse(f.read())
+
+
+@app.get("/v1")
+async def root_v1():
+    """Serve the original v1 page."""
     with open("static/index.html", "r") as f:
         return HTMLResponse(f.read())
 
