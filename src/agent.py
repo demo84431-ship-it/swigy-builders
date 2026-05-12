@@ -24,11 +24,17 @@ from .feature_extractor import (
     extract_from_booking_status,
     extract_from_addresses,
     extract_from_search_restaurants,
+    extract_from_search_menu,
+    extract_from_get_restaurant_menu,
+    extract_from_fetch_food_coupons_enhanced,
+    extract_from_search_products,
+    extract_from_get_food_order_details,
 )
-from .food_dna import FoodDNA
+from .food_dna import ChangeStage, FoodDNA
 from .food_dna_calculator import FoodDNACalculator
 from .mcp_client import MCPClient, MCPError, ErrorBucket
 from .nudge_engine import NudgeEngine, SuppressionState
+from .cart_manager import CartManager
 from .recommender import (
     FESTIVAL_CALENDAR,
     Recommender,
@@ -100,10 +106,13 @@ class FoodDNAAgent:
         self.dna: Optional[FoodDNA] = None
         self.context = AgentContext()
         self._nudge_state = SuppressionState()
+        self._cart_manager = CartManager()
+        self._session_id: str = ""
 
     async def __aenter__(self) -> "FoodDNAAgent":
-        self._mcp = MCPClient(self._config)
+        self._mcp = MCPClient(self._config, session_id=self._session_id or None)
         await self._mcp.__aenter__()
+        self._session_id = self._mcp._session_id
         return self
 
     async def __aexit__(self, *exc: Any) -> None:
@@ -225,6 +234,28 @@ class FoodDNAAgent:
             return await self._handle_festival(intent_lower)
         if any(phrase in intent_lower for phrase in ["restaurant closed", "closed", "unavailable"]):
             return await self._handle_restaurant_closed(kwargs.get("restaurant_name", ""))
+
+        # Tool routing for new MCP tools
+        if any(phrase in intent_lower for phrase in ["search menu", "find biryani", "search biryani", "best biryani"]):
+            return await self._handle_search_menu(intent_lower)
+        if any(phrase in intent_lower for phrase in ["show me coupons", "coupons", "any deals", "discount", "offers"]):
+            return await self._handle_fetch_coupons()
+        if any(phrase in intent_lower for phrase in ["show me the menu", "restaurant menu", "what does", "menu of"]):
+            return await self._handle_get_restaurant_menu(intent_lower, kwargs.get("restaurant_id", ""))
+        if any(phrase in intent_lower for phrase in ["search products", "grocery", "instamart", "find product"]):
+            return await self._handle_search_products(intent_lower)
+        if any(phrase in intent_lower for phrase in ["order details", "order info", "order status"]):
+            return await self._handle_order_details(kwargs.get("order_id", ""))
+
+        # Cart management
+        if any(phrase in intent_lower for phrase in ["add to cart", "add biryani", "order biryani"]):
+            return await self._handle_add_to_cart(kwargs.get("item", {}))
+        if any(phrase in intent_lower for phrase in ["checkout", "place order", "confirm order"]):
+            return await self._handle_checkout()
+        if any(phrase in intent_lower for phrase in ["clear cart", "empty cart"]):
+            return self._handle_clear_cart()
+        if any(phrase in intent_lower for phrase in ["view cart", "my cart", "show cart"]):
+            return self._handle_view_cart()
 
         # Default: general recommendation
         return await self._handle_order_something()
@@ -474,6 +505,313 @@ class FoodDNAAgent:
             f"😔 {restaurant_name} is closed right now.\n\n"
             "Want me to search for something similar, or would you prefer a different cuisine?"
         )
+
+    # -- new tool handlers --------------------------------------------------
+
+    async def _handle_search_menu(self, query: str) -> str:
+        """Handle search_menu — dish discovery across restaurants."""
+        assert self._mcp is not None
+
+        # Extract search term from query
+        search_term = query
+        for phrase in ["search menu", "find me", "best", "near me"]:
+            search_term = search_term.replace(phrase, "")
+        search_term = search_term.strip() or "biryani"
+
+        try:
+            result = await self._mcp.food("search_menu", {"query": search_term})
+
+            # Extract features for Food DNA
+            features = extract_from_search_menu(result)
+            logger.info("search_menu extracted %d items", features.get("search_menu_count", 0))
+
+            # Format response
+            items = result.get("results", result.get("items", []))
+            if not items:
+                return f"I couldn't find '{search_term}' in any nearby restaurants. Want to try a different dish?"
+
+            parts = [f"🔍 **Best {search_term.title()} Near You**\n"]
+            for i, item in enumerate(items[:5], 1):
+                name = item.get("name", item.get("dishName", ""))
+                restaurant = item.get("restaurantName", item.get("restaurant", ""))
+                price = item.get("price", item.get("finalPrice", ""))
+                rating = item.get("rating", item.get("popularity", ""))
+                parts.append(f"**{i}. {name}** — {restaurant}")
+                meta_parts = []
+                if price:
+                    meta_parts.append(f"💰 ₹{int(float(price))}")
+                if rating:
+                    meta_parts.append(f"⭐ {rating}")
+                if meta_parts:
+                    parts.append(f"   {' · '.join(meta_parts)}")
+
+            parts.append("\nWhich one catches your eye?")
+            return "\n".join(parts)
+
+        except MCPError as e:
+            logger.warning("search_menu failed: %s", e)
+            return f"I had trouble searching for '{search_term}'. Want me to try something else?"
+
+    async def _handle_fetch_coupons(self) -> str:
+        """Handle fetch_food_coupons — show available deals."""
+        assert self._mcp is not None
+
+        try:
+            result = await self._mcp.food("fetch_food_coupons")
+
+            # Extract features
+            features = extract_from_fetch_food_coupons_enhanced(result)
+            logger.info("fetch_food_coupons found %d coupons", features.get("enhanced_coupon_count", 0))
+
+            coupons = result.get("coupons", result.get("couponsList", []))
+            if not coupons:
+                return "No coupons available right now. But your Food DNA shows you usually get great value anyway!"
+
+            parts = ["🎟️ **Available Coupons**\n"]
+            for i, coupon in enumerate(coupons[:5], 1):
+                code = coupon.get("code", coupon.get("couponCode", f"DEAL{i}"))
+                desc = coupon.get("description", coupon.get("title", ""))
+                discount = coupon.get("discountValue", coupon.get("maxDiscount", ""))
+                min_order = coupon.get("minOrderValue", coupon.get("minimumOrder", ""))
+
+                parts.append(f"**🏷️ {code}**")
+                if desc:
+                    parts.append(f"   {desc}")
+                meta_parts = []
+                if discount:
+                    meta_parts.append(f"Save ₹{int(float(discount))}")
+                if min_order:
+                    meta_parts.append(f"Min order ₹{int(float(min_order))}")
+                if meta_parts:
+                    parts.append(f"   {' · '.join(meta_parts)}")
+
+            parts.append("\nWant me to apply one of these to your next order?")
+            return "\n".join(parts)
+
+        except MCPError as e:
+            logger.warning("fetch_food_coupons failed: %s", e)
+            return "I couldn't fetch coupons right now. Want me to search for deals on a specific restaurant?"
+
+    async def _handle_get_restaurant_menu(self, query: str, restaurant_id: str) -> str:
+        """Handle get_restaurant_menu — browse a specific restaurant's menu."""
+        assert self._mcp is not None
+
+        if not restaurant_id:
+            # Try to extract restaurant name from query
+            for phrase in ["show me the menu", "restaurant menu", "what does", "menu of"]:
+                query = query.replace(phrase, "")
+            restaurant_name = query.strip()
+            if not restaurant_name:
+                return "Which restaurant's menu would you like to see?"
+
+            # Search for the restaurant first
+            try:
+                search_resp = await self._mcp.food("search_restaurants", {"query": restaurant_name})
+                restaurants = search_resp.get("restaurants", [])
+                if restaurants:
+                    restaurant_id = restaurants[0].get("restaurantId", "")
+                else:
+                    return f"I couldn't find '{restaurant_name}'. Want to try a different name?"
+            except MCPError:
+                return f"I had trouble finding '{restaurant_name}'. Want me to try something else?"
+
+        try:
+            result = await self._mcp.food("get_restaurant_menu", {"restaurantId": restaurant_id})
+
+            # Extract features
+            features = extract_from_get_restaurant_menu(result)
+            logger.info(
+                "get_restaurant_menu: %d sections, price range ₹%.0f-₹%.0f",
+                features.get("section_count", 0),
+                features.get("menu_price_min", 0),
+                features.get("menu_price_max", 0),
+            )
+
+            sections = features.get("sections_browsed", [])
+            price_range = ""
+            if features.get("menu_price_min") and features.get("menu_price_max"):
+                price_range = f"💰 ₹{int(features['menu_price_min'])} – ₹{int(features['menu_price_max'])}"
+
+            parts = ["📋 **Restaurant Menu**\n"]
+            if sections:
+                parts.append(f"Sections: {', '.join(sections[:8])}")
+            if price_range:
+                parts.append(price_range)
+
+            # Show top items
+            items = result.get("items", [])
+            if items:
+                parts.append("\n**Popular items:**")
+                for i, item in enumerate(items[:6], 1):
+                    name = item.get("name", "")
+                    price = item.get("price", item.get("finalPrice", ""))
+                    is_veg = "🟢" if item.get("isVeg") else "🔴" if item.get("isVeg") is False else ""
+                    price_str = f"₹{int(float(price))}" if price else ""
+                    parts.append(f"  {i}. {is_veg} {name} — {price_str}")
+
+            parts.append("\nWhat would you like to add to your cart?")
+            return "\n".join(parts)
+
+        except MCPError as e:
+            logger.warning("get_restaurant_menu failed: %s", e)
+            return "I couldn't load the menu right now. Want me to try a different restaurant?"
+
+    async def _handle_search_products(self, query: str) -> str:
+        """Handle search_products (Instamart) — grocery discovery."""
+        assert self._mcp is not None
+
+        search_term = query
+        for phrase in ["search products", "grocery", "instamart", "find product"]:
+            search_term = search_term.replace(phrase, "")
+        search_term = search_term.strip() or "milk"
+
+        try:
+            result = await self._mcp.instamart("search_products", {"query": search_term})
+
+            # Extract features
+            features = extract_from_search_products(result)
+            logger.info("search_products found %d items", features.get("search_product_count", 0))
+
+            products = result.get("products", result.get("items", []))
+            if not products:
+                return f"I couldn't find '{search_term}' on Instamart. Want to try a different product?"
+
+            parts = [f"🛒 **Instamart: {search_term.title()}**\n"]
+            for i, product in enumerate(products[:5], 1):
+                name = product.get("name", "")
+                brand = product.get("brand", "")
+                price = product.get("price", product.get("discountedPrice", ""))
+                parts.append(f"**{i}. {name}**" + (f" — {brand}" if brand else ""))
+                if price:
+                    parts.append(f"   💰 ₹{int(float(price))}")
+
+            parts.append("\nWant me to add any of these to your Instamart cart?")
+            return "\n".join(parts)
+
+        except MCPError as e:
+            logger.warning("search_products failed: %s", e)
+            return f"I had trouble searching for '{search_term}' on Instamart. Want me to try something else?"
+
+    async def _handle_order_details(self, order_id: str) -> str:
+        """Handle get_food_order_details — detailed order info."""
+        assert self._mcp is not None
+
+        try:
+            result = await self._mcp.food("get_food_order_details", {"orderId": order_id} if order_id else {})
+
+            # Extract features
+            features = extract_from_get_food_order_details(result)
+            logger.info("get_food_order_details: %d items", features.get("detail_item_count", 0))
+
+            if not features.get("order_detail_available"):
+                return "I couldn't find that order. Do you have an order ID?"
+
+            parts = ["📋 **Order Details**\n"]
+
+            items = features.get("detail_items", [])
+            if items:
+                parts.append(f"Items: {', '.join(items[:5])}")
+
+            if features.get("order_total"):
+                parts.append(f"Total: ₹{int(features['order_total'])}")
+
+            if features.get("delivery_time_delta") is not None:
+                delta = features["delivery_time_delta"]
+                if delta <= 0:
+                    parts.append("✅ Delivered on time!")
+                else:
+                    parts.append(f"⏱️ Delivered {int(delta)} min late")
+
+            if features.get("payment_method"):
+                parts.append(f"Payment: {features['payment_method']}")
+
+            if features.get("tipped"):
+                parts.append(f"💝 Tipped ₹{int(features['tip_amount'])}")
+
+            if features.get("order_rating"):
+                parts.append(f"⭐ Your rating: {features['order_rating']}")
+
+            return "\n".join(parts)
+
+        except MCPError as e:
+            logger.warning("get_food_order_details failed: %s", e)
+            return "I couldn't fetch order details right now. Want me to check your recent orders instead?"
+
+    # -- cart handlers -------------------------------------------------------
+
+    async def _handle_add_to_cart(self, item: dict[str, Any]) -> str:
+        """Add an item to the session cart."""
+        session_id = self._session_id or "default"
+
+        # Ensure we have a cart
+        cart = self._cart_manager.get_cart(session_id)
+        if not cart:
+            # Start with a demo restaurant
+            restaurant_id = item.get("restaurant_id", "rest_demo_001")
+            restaurant_name = item.get("restaurant_name", "Restaurant")
+            cart = self._cart_manager.start_cart(session_id, restaurant_id, restaurant_name)
+
+        # Default item if none provided
+        if not item or not item.get("name"):
+            item = {"name": "Biryani", "price": 250, "quantity": 1}
+
+        cart = self._cart_manager.add_item(session_id, item)
+        summary = self._cart_manager.get_confirmation_summary(session_id)
+
+        parts = [
+            f"🛒 **Added to cart!**",
+            f"Restaurant: {cart.restaurant_name}",
+            f"",
+            f"Items: {cart.item_count} · Total: ₹{cart.total:.0f}",
+            f"",
+            f"Say 'checkout' to place your order, or keep browsing!",
+        ]
+        return "\n".join(parts)
+
+    async def _handle_checkout(self) -> str:
+        """Handle checkout — confirm and place order."""
+        session_id = self._session_id or "default"
+        summary = self._cart_manager.get_confirmation_summary(session_id)
+
+        if not summary.get("has_cart"):
+            return "Your cart is empty! What would you like to order?"
+
+        if summary.get("empty"):
+            return "Your cart is empty! Add some items first."
+
+        parts = [
+            f"🛒 **Order Confirmation**",
+            f"📍 {summary['restaurant_name']}",
+            f"",
+        ]
+        parts.extend(summary["items"])
+        parts.extend([
+            f"",
+            f"Subtotal: ₹{summary['subtotal']:.0f}",
+            f"Delivery: ₹{summary['delivery_fee']:.0f}",
+            f"**Total: ₹{summary['total']:.0f}**",
+            f"",
+            f"Shall I place the order? Say 'confirm' to proceed.",
+        ])
+
+        self.context.pending_confirmation = summary
+        return "\n".join(parts)
+
+    def _handle_clear_cart(self) -> str:
+        """Clear the current cart."""
+        session_id = self._session_id or "default"
+        self._cart_manager.clear_cart(session_id)
+        return "🗑️ Cart cleared! What would you like to order instead?"
+
+    def _handle_view_cart(self) -> str:
+        """View current cart."""
+        session_id = self._session_id or "default"
+        summary = self._cart_manager.get_confirmation_summary(session_id)
+
+        if not summary.get("has_cart") or summary.get("empty"):
+            return "Your cart is empty! What would you like to order?"
+
+        return summary["formatted_summary"]
 
     # -- proactive nudge (called by scheduler) -------------------------------
 

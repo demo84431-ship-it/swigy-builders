@@ -16,6 +16,7 @@ import hashlib
 import logging
 import secrets
 import time
+import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional
@@ -194,11 +195,13 @@ class MCPClient:
         result = await client.call_tool("food", "get_addresses")
     """
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, session_id: Optional[str] = None) -> None:
         self._config = config
         self._token = TokenStore()
         self._rate_limiter = RateLimiter(config.rate_limit.max_requests_per_minute)
         self._http: Optional[httpx.AsyncClient] = None
+        self._session_id: str = session_id or uuid.uuid4().hex[:12]
+        logger.info("MCPClient initialized with session_id=%s", self._session_id)
 
     # -- lifecycle -----------------------------------------------------------
 
@@ -274,6 +277,8 @@ class MCPClient:
             return ErrorBucket.AUTH
         if status_code == 400:
             return ErrorBucket.BAD_INPUT
+        if status_code == 429:
+            return ErrorBucket.UNKNOWN  # Handled separately with Retry-After
         if status_code == 504:
             return ErrorBucket.UPSTREAM_TIMEOUT
         if status_code in (502, 503):
@@ -283,6 +288,20 @@ class MCPClient:
         if status_code == 200 and data.get("success") is False:
             return ErrorBucket.DOMAIN
         return ErrorBucket.UNKNOWN
+
+    def _check_deprecation(self, data: dict[str, Any], server: str, tool_name: str) -> None:
+        """Check for deprecation notices in MCP response metadata."""
+        meta = data.get("_meta", {})
+        swiggy_meta = meta.get("swiggy", meta.get("Swiggy", {}))
+        deprecation = swiggy_meta.get("deprecation")
+        if deprecation:
+            logger.warning(
+                "DEPRECATION NOTICE for %s/%s: %s (session=%s)",
+                server,
+                tool_name,
+                deprecation if isinstance(deprecation, str) else str(deprecation),
+                self._session_id,
+            )
 
     async def call_tool(
         self,
@@ -315,13 +334,19 @@ class MCPClient:
         payload = {
             "jsonrpc": "2.0",
             "method": "tools/call",
-            "params": {"name": tool_name, "arguments": arguments or {}},
+            "params": {
+                "name": tool_name,
+                "arguments": arguments or {},
+                "_session_id": self._session_id,
+            },
             "id": request_id,
         }
         headers = {
             "Authorization": f"Bearer {self._token.access_token}",
             "Content-Type": "application/json",
         }
+
+        logger.debug("call_tool %s/%s session=%s attempt starting", server, tool_name, self._session_id)
 
         delay = self._config.rate_limit.retry_initial_delay_ms / 1000.0
         max_retries = self._config.rate_limit.retry_max_attempts
@@ -352,7 +377,35 @@ class MCPClient:
                         report_link=error.get("reportLink"),
                         report_hint=error.get("reportHint"),
                     )
+                # Deprecation monitoring
+                self._check_deprecation(data, server, tool_name)
+                logger.debug("call_tool %s/%s session=%s succeeded", server, tool_name, self._session_id)
                 return data
+
+            # Rate limit 429 — respect Retry-After header
+            if resp.status_code == 429:
+                retry_after = resp.headers.get("Retry-After", resp.headers.get("retry-after", ""))
+                if retry_after:
+                    try:
+                        wait_seconds = float(retry_after)
+                    except (ValueError, TypeError):
+                        wait_seconds = delay
+                else:
+                    wait_seconds = delay
+
+                if attempt < max_retries:
+                    logger.warning(
+                        "Rate limited (429) on %s/%s, Retry-After=%.1fs, attempt %d",
+                        server, tool_name, wait_seconds, attempt + 1,
+                    )
+                    await asyncio.sleep(wait_seconds)
+                    delay = min(wait_seconds, self._config.rate_limit.retry_max_delay_ms / 1000.0)
+                    continue
+                raise MCPError(
+                    ErrorBucket.UNKNOWN,
+                    f"Rate limited after {max_retries} retries: {server}/{tool_name}",
+                    status_code=429,
+                )
 
             # Classify the error
             try:

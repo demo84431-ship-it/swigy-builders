@@ -352,6 +352,321 @@ def extract_from_coupons(response: dict[str, Any]) -> dict[str, Any]:
     return features
 
 
+def extract_from_search_menu(response: dict[str, Any]) -> dict[str, Any]:
+    """Extract features from search_menu response.
+
+    Reveals what dishes users search for across restaurants —
+    the discovery signal that complements order history.
+    """
+    results = response.get("results", response.get("items", []))
+    if not results:
+        return {"search_menu_count": 0}
+
+    features: dict[str, Any] = {"search_menu_count": len(results)}
+
+    # Dish names searched
+    dish_names = []
+    cuisine_counter: Counter[str] = Counter()
+    prices: list[float] = []
+    dietary_signals: Counter[str] = Counter()
+
+    non_veg_keywords = {"chicken", "mutton", "fish", "prawn", "egg", "beef", "pork", "lamb", "meat"}
+    veg_keywords = {"paneer", "dal", "aloo", "gobi", "mushroom", "soya", "palak"}
+
+    for item in results:
+        name = item.get("name", "") or item.get("dishName", "")
+        if name:
+            dish_names.append(name)
+            cuisine_counter[_cuisine_from_name(name)] += 1
+
+            name_lower = name.lower()
+            if any(kw in name_lower for kw in non_veg_keywords):
+                dietary_signals["non_veg"] += 1
+            elif any(kw in name_lower for kw in veg_keywords):
+                dietary_signals["veg"] += 1
+
+        price = _safe_float(item.get("price") or item.get("finalPrice"))
+        if price > 0:
+            prices.append(price)
+
+        # Popularity score if available
+        popularity = _safe_float(item.get("popularity") or item.get("rating"))
+        if popularity > 0:
+            features.setdefault("popularity_scores", []).append(popularity)
+
+    # Cuisine distribution from search
+    total_cuisines = sum(cuisine_counter.values()) or 1
+    features["search_cuisine_distribution"] = {k: v / total_cuisines for k, v in cuisine_counter.items()}
+
+    # Price range of searched items
+    if prices:
+        features["search_price_min"] = min(prices)
+        features["search_price_max"] = max(prices)
+        features["search_price_avg"] = sum(prices) / len(prices)
+
+    # Dietary signals from search terms
+    total_dietary = sum(dietary_signals.values()) or 1
+    features["search_dietary_signals"] = {k: v / total_dietary for k, v in dietary_signals.items()}
+
+    features["searched_dishes"] = dish_names[:20]
+
+    return features
+
+
+def extract_from_get_restaurant_menu(response: dict[str, Any]) -> dict[str, Any]:
+    """Extract features from get_restaurant_menu response.
+
+    Reveals browsing behavior — what sections they look at,
+    what price ranges they consider, variant preferences.
+    """
+    sections = response.get("sections", response.get("categories", []))
+    items = response.get("items", [])
+    features: dict[str, Any] = {}
+
+    # If flat items list, extract sections from it
+    if not sections and items:
+        section_names = set()
+        for item in items:
+            cat = item.get("category", item.get("section", ""))
+            if cat:
+                section_names.add(cat)
+        sections = [{"name": s} for s in section_names]
+
+    features["sections_browsed"] = [s.get("name", "") for s in sections if s.get("name")]
+    features["section_count"] = len(sections)
+
+    # Price range of viewed items
+    all_items = items
+    if not all_items:
+        # Flatten sections into items
+        for section in sections:
+            all_items.extend(section.get("items", []))
+
+    prices = [_safe_float(item.get("price") or item.get("finalPrice")) for item in all_items]
+    prices = [p for p in prices if p > 0]
+    if prices:
+        features["menu_price_min"] = min(prices)
+        features["menu_price_max"] = max(prices)
+        features["menu_price_avg"] = sum(prices) / len(prices)
+
+    # Variant preferences (veg/non-veg, size)
+    variant_counter: Counter[str] = Counter()
+    for item in all_items:
+        is_veg = item.get("isVeg", item.get("veg", None))
+        if is_veg is True:
+            variant_counter["veg"] += 1
+        elif is_veg is False:
+            variant_counter["non_veg"] += 1
+
+        # Size variants
+        variants = item.get("variants", item.get("sizes", []))
+        if variants:
+            for v in variants:
+                size = v.get("name", v.get("size", ""))
+                if size:
+                    variant_counter[f"size_{size.lower()}"] += 1
+
+    total_variants = sum(variant_counter.values()) or 1
+    features["variant_distribution"] = {k: v / total_variants for k, v in variant_counter.items()}
+
+    # Add-on patterns
+    add_on_count = 0
+    for item in all_items:
+        addons = item.get("addons", item.get("addOns", item.get("customizations", [])))
+        if addons:
+            add_on_count += len(addons)
+    features["total_addons_available"] = add_on_count
+    features["avg_addons_per_item"] = add_on_count / max(len(all_items), 1)
+
+    return features
+
+
+def extract_from_fetch_food_coupons_enhanced(response: dict[str, Any]) -> dict[str, Any]:
+    """Enhanced coupon extraction.
+
+    Extracts: coupon types (percentage vs flat), minimum order values,
+    restaurant-specific vs platform coupons, expiry urgency.
+    """
+    coupons = response.get("coupons", response.get("couponsList", []))
+    if not coupons:
+        return {"enhanced_coupon_count": 0}
+
+    features: dict[str, Any] = {"enhanced_coupon_count": len(coupons)}
+
+    # Coupon types: percentage vs flat
+    type_counter: Counter[str] = Counter()
+    min_order_values: list[float] = []
+    scope_counter: Counter[str] = Counter()
+    urgency_counter: Counter[str] = Counter()
+
+    for coupon in coupons:
+        # Type detection
+        discount_type = coupon.get("discountType", coupon.get("type", ""))
+        if not discount_type:
+            # Infer from fields
+            if coupon.get("discountPercent") or coupon.get("percentage"):
+                discount_type = "percentage"
+            elif coupon.get("flatDiscount") or coupon.get("discountValue"):
+                discount_type = "flat"
+            else:
+                discount_type = "unknown"
+        type_counter[discount_type] += 1
+
+        # Minimum order value
+        min_order = _safe_float(coupon.get("minOrderValue") or coupon.get("minimumOrder"))
+        if min_order > 0:
+            min_order_values.append(min_order)
+
+        # Scope: restaurant-specific vs platform
+        restaurant_id = coupon.get("restaurantId", coupon.get("restaurantSpecific", ""))
+        if restaurant_id:
+            scope_counter["restaurant_specific"] += 1
+        else:
+            scope_counter["platform_wide"] += 1
+
+        # Expiry urgency
+        expiry = coupon.get("expiryDate", coupon.get("expiresAt", ""))
+        if expiry:
+            try:
+                exp_dt = datetime.fromisoformat(expiry.replace("Z", "+00:00"))
+                days_left = (exp_dt - datetime.now(timezone.utc)).days
+                if days_left <= 0:
+                    urgency_counter["expired"] += 1
+                elif days_left <= 1:
+                    urgency_counter["expires_today"] += 1
+                elif days_left <= 3:
+                    urgency_counter["expires_soon"] += 1
+                else:
+                    urgency_counter["no_urgency"] += 1
+            except (ValueError, TypeError):
+                urgency_counter["unknown_expiry"] += 1
+
+    total_coupons = len(coupons) or 1
+    features["coupon_type_distribution"] = {k: v / total_coupons for k, v in type_counter.items()}
+    features["coupon_scope_distribution"] = {k: v / total_coupons for k, v in scope_counter.items()}
+    features["coupon_urgency_distribution"] = {k: v / total_coupons for k, v in urgency_counter.items()}
+
+    if min_order_values:
+        features["avg_min_order_value"] = sum(min_order_values) / len(min_order_values)
+        features["min_order_range"] = (min(min_order_values), max(min_order_values))
+
+    # Deal-seeking intensity: how many coupons are percentage-based (generally better deals)
+    pct_ratio = type_counter.get("percentage", 0) / total_coupons
+    features["percentage_coupon_ratio"] = pct_ratio
+
+    return features
+
+
+def extract_from_search_products(response: dict[str, Any]) -> dict[str, Any]:
+    """Extract features from Instamart search_products response.
+
+    Reveals grocery discovery intent — what products they're looking for
+    beyond their go-to items.
+    """
+    products = response.get("products", response.get("items", []))
+    if not products:
+        return {"search_product_count": 0}
+
+    features: dict[str, Any] = {"search_product_count": len(products)}
+
+    # Product categories searched
+    categories: Counter[str] = Counter()
+    brands: Counter[str] = Counter()
+    prices: list[float] = []
+
+    for product in products:
+        cat = product.get("category", product.get("subCategory", "other"))
+        categories[cat] += 1
+
+        brand = product.get("brand", "")
+        if brand:
+            brands[brand] += 1
+
+        price = _safe_float(product.get("price") or product.get("discountedPrice"))
+        if price > 0:
+            prices.append(price)
+
+    total_cats = sum(categories.values()) or 1
+    features["product_category_distribution"] = {k: v / total_cats for k, v in categories.items()}
+
+    # Price sensitivity: ratio of discounted/low-price items searched
+    if prices:
+        features["search_product_price_avg"] = sum(prices) / len(prices)
+        features["search_product_price_min"] = min(prices)
+        features["search_product_price_max"] = max(prices)
+
+    # Brand preferences
+    total_brands = sum(brands.values()) or 1
+    features["search_brand_distribution"] = {k: v / total_brands for k, v in brands.most_common(10)}
+    features["unique_brands_searched"] = len(brands)
+
+    # Price sensitivity signal: if user searches for budget items
+    if prices:
+        budget_threshold = 100  # ₹100 as budget threshold for groceries
+        budget_items = sum(1 for p in prices if p < budget_threshold)
+        features["budget_product_ratio"] = budget_items / len(prices)
+
+    return features
+
+
+def extract_from_get_food_order_details(response: dict[str, Any]) -> dict[str, Any]:
+    """Extract features from get_food_order_details response.
+
+    Detailed order info — item-level data, delivery time accuracy,
+    payment method preferences.
+    """
+    order = response.get("order", response)
+    if not order:
+        return {"order_detail_available": False}
+
+    features: dict[str, Any] = {"order_detail_available": True}
+
+    # Actual items ordered
+    items = order.get("items", [])
+    item_names = []
+    for item in items:
+        name = item.get("name", "") if isinstance(item, dict) else str(item)
+        if name:
+            item_names.append(name)
+    features["detail_items"] = item_names
+    features["detail_item_count"] = len(item_names)
+
+    # Delivery time: actual vs estimated
+    estimated_time = _safe_float(order.get("estimatedDeliveryTime") or order.get("eta"))
+    actual_time = _safe_float(order.get("actualDeliveryTime") or order.get("deliveredIn"))
+    if estimated_time > 0 and actual_time > 0:
+        features["delivery_time_delta"] = actual_time - estimated_time
+        features["delivery_time_accuracy"] = 1.0 - min(abs(actual_time - estimated_time) / max(estimated_time, 1), 1.0)
+    elif estimated_time > 0:
+        features["estimated_delivery_time"] = estimated_time
+
+    # Payment method
+    payment = order.get("paymentMethod", order.get("payment", {}))
+    if isinstance(payment, dict):
+        method = payment.get("method", payment.get("type", ""))
+    else:
+        method = str(payment)
+    if method:
+        features["payment_method"] = method
+
+    # Tip behavior
+    tip = _safe_float(order.get("tip") or order.get("tipAmount"))
+    features["tip_amount"] = tip
+    features["tipped"] = tip > 0
+
+    # Rating given
+    rating = _safe_float(order.get("rating") or order.get("userRating"))
+    if rating > 0:
+        features["order_rating"] = rating
+
+    # Order total
+    total = _safe_float(order.get("total") or order.get("orderTotal") or order.get("amount"))
+    if total > 0:
+        features["order_total"] = total
+
+    return features
+
+
 # ---------------------------------------------------------------------------
 # Aggregate extractor
 # ---------------------------------------------------------------------------
@@ -373,6 +688,11 @@ def extract_all_features(mcp_responses: dict[str, dict[str, Any]]) -> dict[str, 
         "get_addresses": extract_from_addresses,
         "search_restaurants": extract_from_search_restaurants,
         "fetch_food_coupons": extract_from_coupons,
+        "search_menu": extract_from_search_menu,
+        "get_restaurant_menu": extract_from_get_restaurant_menu,
+        "fetch_food_coupons_enhanced": extract_from_fetch_food_coupons_enhanced,
+        "search_products": extract_from_search_products,
+        "get_food_order_details": extract_from_get_food_order_details,
     }
 
     all_features: dict[str, Any] = {}

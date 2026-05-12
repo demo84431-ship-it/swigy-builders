@@ -138,7 +138,7 @@ def get_active_profile_data(session: dict[str, Any]) -> dict[str, Any] | None:
     return None
 
 
-def demo_response(message: str, profile_data: dict[str, Any] | None = None) -> str:
+def demo_response(message: str, profile_data: dict[str, Any] | None = None, session_id: str = "default") -> str:
     """Generate demo responses using profile context."""
     msg = message.lower().strip()
 
@@ -323,6 +323,136 @@ def demo_response(message: str, profile_data: dict[str, Any] | None = None) -> s
             f'<em>⚡ Demo mode — connect Swiggy to order for real</em>'
         )
 
+    # ── NEW: Search menu (biryani discovery) ────────────────────────────
+    if any(p in msg for p in ["best biryani", "find biryani", "search biryani", "biryani near me", "search menu"]):
+        return (
+            f'<div class="rich-card">'
+            f'<div class="rich-card-header">'
+            f'<div class="rich-card-img">🔍</div>'
+            f'<div class="rich-card-info">'
+            f'<div class="rich-card-title">Best Biryani Near You</div>'
+            f'<div class="rich-card-subtitle">Based on ratings & your taste profile</div>'
+            f'</div></div>'
+            f'<div class="rich-card-meta">'
+            f'<span class="meta-chip">🔥 Trending</span>'
+            f'<span class="meta-chip">📍 {city or "Your area"}</span>'
+            f'</div>'
+            f'<div class="rich-card-options">'
+            f'<div class="option-card">'
+            f'<div class="option-title">🍗 Meghana Foods — Chicken Biryani</div>'
+            f'<div class="option-detail">⭐ 4.5 · ₹280 · 30-35 min · "The OG biryani"</div>'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Order Meghana biryani\')">Order</button>'
+            f'</div>'
+            f'<div class="option-card">'
+            f'<div class="option-title">🍖 Behrouz — Lucknowi Biryani</div>'
+            f'<div class="option-detail">⭐ 4.3 · ₹320 · 35-40 min · Royal dum style</div>'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Order Behrouz biryani\')">Order</button>'
+            f'</div>'
+            f'<div class="option-card">'
+            f'<div class="option-title">🌿 Hyderabadi Veg Biryani</div>'
+            f'<div class="option-detail">⭐ 4.4 · ₹220 · 25-30 min · {dietary.replace("_", " ").title()}</div>'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Order veg biryani\')">Order</button>'
+            f'</div>'
+            f'<div class="option-card">'
+            f'<div class="option-title">🏪 Student Biryani</div>'
+            f'<div class="option-detail">⭐ 4.2 · ₹180 · 20-25 min · Budget-friendly</div>'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Order student biryani\')">Order</button>'
+            f'</div></div></div>'
+            f'<em>⚡ Demo mode — connect Swiggy to order for real</em>'
+        )
+
+    # ── NEW: Show coupons ───────────────────────────────────────────────
+    if any(p in msg for p in ["show me coupons", "coupons", "any deals", "discount", "offers"]):
+        return (
+            f'<div class="rich-card">'
+            f'<div class="rich-card-header">'
+            f'<div class="rich-card-img">🎟️</div>'
+            f'<div class="rich-card-info">'
+            f'<div class="rich-card-title">Available Coupons</div>'
+            f'<div class="rich-card-subtitle">3 coupons found for you</div>'
+            f'</div></div>'
+            f'<div class="rich-card-meta">'
+            f'<span class="meta-chip">💰 Save up to ₹150</span>'
+            f'</div>'
+            f'<div class="rich-card-options">'
+            f'<div class="option-card">'
+            f'<div class="option-title">🏷️ FLAT50</div>'
+            f'<div class="option-detail">Flat ₹50 off · Min order ₹199 · Expires in 2 days</div>'
+            f'<div class="option-detail" style="color:#e67e22;">⚡ Expiring soon!</div>'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Apply FLAT50\')">Apply</button>'
+            f'</div>'
+            f'<div class="option-card">'
+            f'<div class="option-title">🏷️ BIRYANI30</div>'
+            f'<div class="option-detail">30% off up to ₹100 · Min order ₹250 · Biryani only</div>'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Apply BIRYANI30\')">Apply</button>'
+            f'</div>'
+            f'<div class="option-card">'
+            f'<div class="option-title">🏷️ NEWUSER</div>'
+            f'<div class="option-detail">60% off up to ₹150 · First order · No min order</div>'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Apply NEWUSER\')">Apply</button>'
+            f'</div></div></div>'
+            f'<em>⚡ Demo mode — connect Swiggy to apply coupons for real</em>'
+        )
+
+    # ── NEW: Add to cart / checkout flow ────────────────────────────────
+    if any(p in msg for p in ["add to cart", "add biryani", "order biryani", "checkout", "place order"]):
+        cart_items = [
+            {"name": "Chicken Biryani", "qty": 1, "price": 280, "variant": "Full"},
+            {"name": "Raita", "qty": 1, "price": 40, "variant": ""},
+        ]
+        subtotal = sum(i["price"] * i["qty"] for i in cart_items)
+        delivery = 30
+        total = subtotal + delivery
+
+        item_lines = ""
+        for item in cart_items:
+            v = f" ({item['variant']})" if item["variant"] else ""
+            item_lines += f'<div class="option-detail">• {item["qty"]}x {item["name"]}{v} — ₹{item["price"] * item["qty"]}</div>'
+
+        return (
+            f'<div class="rich-card">'
+            f'<div class="rich-card-header">'
+            f'<div class="rich-card-img">🛒</div>'
+            f'<div class="rich-card-info">'
+            f'<div class="rich-card-title">Your Cart</div>'
+            f'<div class="rich-card-subtitle">Meghana Foods</div>'
+            f'</div></div>'
+            f'<div class="rich-card-meta">'
+            f'<span class="meta-chip">🕐 25-30 min</span>'
+            f'<span class="meta-chip">📍 Home</span>'
+            f'</div>'
+            f'{item_lines}'
+            f'<div class="option-detail" style="margin-top:8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">'
+            f'Subtotal: ₹{subtotal} · Delivery: ₹{delivery} · <strong>Total: ₹{total}</strong></div>'
+            f'<div class="rich-card-actions">'
+            f'<button class="action-btn primary" onclick="sendSuggestion(\'Confirm order\')">✅ Confirm Order (₹{total})</button>'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Show me coupons\')">🎟️ Apply Coupon</button>'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Clear cart\')">🗑️ Clear Cart</button>'
+            f'</div></div>'
+            f'<em>⚡ Demo mode — connect Swiggy to place a real order</em>'
+        )
+
+    if any(p in msg for p in ["confirm order", "confirm"]):
+        return (
+            f'<div class="rich-card">'
+            f'<div class="rich-card-header">'
+            f'<div class="rich-card-img">✅</div>'
+            f'<div class="rich-card-info">'
+            f'<div class="rich-card-title">Order Placed!</div>'
+            f'<div class="rich-card-subtitle">Meghana Foods</div>'
+            f'</div></div>'
+            f'<div class="rich-card-meta">'
+            f'<span class="meta-chip">📋 Order #FDNA-DEMO-42</span>'
+            f'<span class="meta-chip">🕐 Arriving in 25-30 min</span>'
+            f'</div>'
+            f'<div class="rich-card-desc">Your Chicken Biryani is being prepared! Track your order in the Swiggy app.</div>'
+            f'<div class="rich-card-actions">'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Track order\')">📍 Track Order</button>'
+            f'<button class="action-btn" onclick="sendSuggestion(\'Order my usual\')">🔄 Reorder</button>'
+            f'</div></div>'
+            f'<em>⚡ Demo mode — no real order was placed</em>'
+        )
+
     # Fallback: check sample conversations for a match
     for conv in sample_convs:
         if conv.get("user", "").lower().strip() == msg:
@@ -352,6 +482,21 @@ def demo_response(message: str, profile_data: dict[str, Any] | None = None) -> s
         f'<div class="option-title">🎲 Surprise me</div>'
         f'<div class="option-detail">Controlled novelty</div>'
         f'<button class="action-btn" onclick="sendSuggestion(\'Surprise me\')">Try</button>'
+        f'</div>'
+        f'<div class="option-card">'
+        f'<div class="option-title">🔍 Find best biryani</div>'
+        f'<div class="option-detail">Search & discovery</div>'
+        f'<button class="action-btn" onclick="sendSuggestion(\'Find me the best biryani\')">Try</button>'
+        f'</div>'
+        f'<div class="option-card">'
+        f'<div class="option-title">🎟️ Show me coupons</div>'
+        f'<div class="option-detail">Deals & offers</div>'
+        f'<button class="action-btn" onclick="sendSuggestion(\'Show me coupons\')">Try</button>'
+        f'</div>'
+        f'<div class="option-card">'
+        f'<div class="option-title">🛒 Add to cart</div>'
+        f'<div class="option-detail">Cart & checkout flow</div>'
+        f'<button class="action-btn" onclick="sendSuggestion(\'Add to cart\')">Try</button>'
         f'</div></div></div>'
         f'<em>⚡ Demo mode — connect Swiggy for real data</em>'
     )
@@ -501,7 +646,7 @@ async def chat(request: Request):
     # ── Demo mode: use profile-aware responses ────────────────────────
     if DEMO_MODE:
         profile_data = get_active_profile_data(session)
-        return {"reply": demo_response(message, profile_data), "mode": "demo"}
+        return {"reply": demo_response(message, profile_data, session_id), "mode": "demo", "session_id": session_id}
 
     # ── Real mode: use FoodDNA agent with MCP ─────────────────────────
     if not session.get("access_token"):
@@ -525,7 +670,7 @@ async def chat(request: Request):
         if agent.dna:
             session["dna"] = agent.dna.to_dict()
 
-    return {"reply": response}
+    return {"reply": response, "session_id": session_id}
 
 
 @app.get("/api/profile")
@@ -561,8 +706,8 @@ async def websocket_chat(websocket: WebSocket):
 
             if DEMO_MODE:
                 profile_data = get_active_profile_data(session)
-                reply = demo_response(message, profile_data)
-                await websocket.send_json({"reply": reply, "mode": "demo"})
+                reply = demo_response(message, profile_data, session_id)
+                await websocket.send_json({"reply": reply, "mode": "demo", "session_id": session_id})
                 continue
 
             if not session.get("access_token"):
@@ -580,7 +725,7 @@ async def websocket_chat(websocket: WebSocket):
                 if agent.dna:
                     session["dna"] = agent.dna.to_dict()
 
-            await websocket.send_json({"reply": response})
+            await websocket.send_json({"reply": response, "session_id": session_id})
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")

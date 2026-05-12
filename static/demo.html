@@ -425,6 +425,132 @@
     }
     .empty-state .hint svg { width: 16px; height: 16px; stroke: var(--muted-light); }
 
+    /* Animated DNA Helix in empty state */
+    .empty-state .dna-helix {
+      position: relative; width: 80px; height: 80px; margin-bottom: 20px;
+    }
+    .dna-helix .strand {
+      position: absolute; top: 50%; left: 50%; width: 60px; height: 60px;
+      border: 2px solid var(--accent); border-radius: 50%; opacity: 0.3;
+      transform: translate(-50%, -50%);
+      animation: helixPulse 2.4s ease-in-out infinite;
+    }
+    .dna-helix .strand:nth-child(1) { animation-delay: 0s; }
+    .dna-helix .strand:nth-child(2) { animation-delay: 0.6s; width: 44px; height: 44px; border-color: var(--forest); }
+    .dna-helix .strand:nth-child(3) { animation-delay: 1.2s; width: 28px; height: 28px; }
+    .dna-helix .core {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 28px; animation: helixBounce 1.6s ease-in-out infinite;
+    }
+    @keyframes helixPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+      50% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.6; }
+    }
+    @keyframes helixBounce {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    /* Slide-up entrance for rich cards */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .rich-card.animate-in { animation: slideUp 0.4s ease-out forwards; }
+
+    /* Cart flow styles */
+    .cart-card { margin-top: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .cart-card-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .cart-card-header .icon { font-size: 22px; }
+    .cart-card-header .title { font-size: 14px; font-weight: 600; color: var(--ink); }
+    .cart-card-body { padding: 14px 16px; }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+    .cart-item .name { color: var(--ink-soft); }
+    .cart-item .price { color: var(--ink); font-weight: 600; font-family: var(--font-mono); }
+    .cart-totals { border-top: 1px solid var(--border); margin-top: 8px; padding-top: 8px; }
+    .cart-total { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+    .cart-total.grand { font-weight: 700; font-size: 15px; color: var(--accent); padding-top: 8px; border-top: 1px solid var(--border); margin-top: 4px; }
+    .cart-card-actions { display: flex; gap: 8px; padding: 0 16px 14px; }
+
+    /* Order success */
+    .order-success { text-align: center; padding: 20px; }
+    .order-success .emoji { font-size: 40px; margin-bottom: 8px; }
+    .order-success h4 { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .order-success p { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+    .order-success .tracking { font-family: var(--font-mono); font-size: 12px; color: var(--accent); background: var(--accent-bg); padding: 6px 14px; border-radius: var(--radius-pill); display: inline-block; }
+
+    /* Instamart cross-sell */
+    .instamart-suggest {
+      margin-top: 10px; padding: 10px 14px; background: var(--surface-warm);
+      border: 1px dashed var(--border-strong); border-radius: var(--radius);
+      font-size: 12px; color: var(--ink-soft);
+    }
+    .instamart-suggest .title { font-weight: 600; color: var(--ink); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .instamart-items { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .instamart-item {
+      display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill);
+      font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: var(--font-body);
+    }
+    .instamart-item:hover { border-color: var(--forest); color: var(--forest); background: rgba(47,91,79,0.06); }
+
+    /* Search results card */
+    .search-results { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .search-item {
+      display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+      background: var(--surface-warm); border: 1px solid var(--border); border-radius: 10px;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .search-item:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .search-item .dish-emoji { font-size: 24px; flex-shrink: 0; }
+    .search-item .dish-info { flex: 1; min-width: 0; }
+    .search-item .dish-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .search-item .dish-restaurant { font-size: 11px; color: var(--muted); }
+    .search-item .dish-meta { display: flex; gap: 8px; margin-top: 3px; font-size: 11px; }
+    .search-item .dish-meta .rating { color: var(--forest); }
+    .search-item .dish-meta .time { color: var(--muted); }
+    .search-item .dish-price { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+
+    /* Coupon card */
+    .coupon-card {
+      padding: 12px; background: var(--surface-warm); border: 1px solid var(--border);
+      border-radius: 10px; margin-top: 8px; position: relative; overflow: hidden;
+    }
+    .coupon-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--accent);
+    }
+    .coupon-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .coupon-discount { font-size: 16px; font-weight: 700; color: var(--accent); }
+    .coupon-code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); background: var(--surface); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); }
+    .coupon-desc { font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
+    .coupon-meta { font-size: 11px; color: var(--muted); display: flex; gap: 12px; }
+
+    /* Profile pill hover scale */
+    .profile-item { transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .profile-item:hover { transform: scale(1.02); }
+
+    /* Send button pulse on hover */
+    @keyframes sendPulse {
+      0% { box-shadow: 0 0 0 0 rgba(192,81,47,0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(192,81,47,0); }
+      100% { box-shadow: 0 0 0 0 rgba(192,81,47,0); }
+    }
+    #send-btn:hover { animation: sendPulse 1.2s ease-in-out infinite; }
+
+    /* Loading dots for cart */
+    .loading-dots { display: inline-flex; gap: 4px; }
+    .loading-dots span {
+      width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+      animation: dotBounce 1s infinite ease-in-out;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
     /* ═══════════════════════════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════════════════════════ */
@@ -501,6 +627,8 @@
       <div class="quick-prompts">
         <h4>Quick Prompts</h4>
         <button class="quick-prompt" onclick="sendSuggestion('Order my usual')">Order my usual</button>
+        <button class="quick-prompt" onclick="sendSuggestion('Find me the best biryani')">Find a dish</button>
+        <button class="quick-prompt" onclick="sendSuggestion('Any coupons or deals?')">Coupons & deals</button>
         <button class="quick-prompt" onclick="sendSuggestion('It\'s Friday')">It's Friday</button>
         <button class="quick-prompt" onclick="sendSuggestion('Plan my evening')">Plan my evening</button>
         <button class="quick-prompt" onclick="sendSuggestion('Something healthy')">Something healthy</button>
@@ -515,8 +643,11 @@
 
       <div class="messages" id="messages">
         <div class="empty-state" id="empty-state">
-          <div class="empty-state-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round"><path d="M12 2v20M4 6c4 0 4 4 8 4s4-4 8-4M4 18c4 0 4-4 8-4s4 4 8 4M4 12h16"/></svg>
+          <div class="dna-helix">
+            <div class="strand"></div>
+            <div class="strand"></div>
+            <div class="strand"></div>
+            <div class="core">🧬</div>
           </div>
           <h2>Welcome to FoodDNA</h2>
           <p>Select a profile from the left panel to start a conversation. Each profile represents a unique Indian food psychology.</p>
@@ -749,6 +880,9 @@
     // ═══════════════════════════════════════════════════════════════
     // CHAT
     // ═══════════════════════════════════════════════════════════════
+    let cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0 };
+    let instamartShown = false;
+
     async function sendMessage() {
       const input = document.getElementById('chat-input');
       const message = input.value.trim();
@@ -756,6 +890,14 @@
       input.value = '';
 
       addMessage('user', message);
+
+      // Check for demo scenarios first
+      const msg = message.toLowerCase();
+      if (handleDemoScenario(msg, message)) {
+        updateSuggestions(message);
+        return;
+      }
+
       showTyping();
 
       try {
@@ -767,11 +909,284 @@
         hideTyping();
         const data = await res.json();
         addMessage('agent', data.reply);
+
+        // Check if the reply contains an "Order Now" type action — we'll intercept clicks on rich card buttons
         updateSuggestions(message);
       } catch (err) {
         hideTyping();
         addMessage('agent', 'Something went wrong. Please try again.');
       }
+    }
+
+    function handleDemoScenario(msg, original) {
+      // Search Menu scenario
+      if (msg.includes('find me') || msg.includes('search') || msg.includes('best biryani') ||
+          msg.includes('best pizza') || msg.includes('find a dish') || msg.includes('look for')) {
+        showTyping();
+        setTimeout(() => {
+          hideTyping();
+          showSearchResults(msg);
+        }, 800);
+        return true;
+      }
+
+      // Coupons scenario
+      if (msg.includes('coupon') || msg.includes('deal') || msg.includes('discount') ||
+          msg.includes('offer') || msg.includes('promo')) {
+        showTyping();
+        setTimeout(() => {
+          hideTyping();
+          showCouponsCard();
+        }, 600);
+        return true;
+      }
+
+      return false;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SEARCH RESULTS SCENARIO
+    // ═══════════════════════════════════════════════════════════════
+    function showSearchResults(msg) {
+      const dishes = [
+        { emoji: '🍛', name: 'Hyderabadi Biryani', restaurant: 'Paradise Biryani', rating: '4.6', price: '₹299', time: '30-35 min' },
+        { emoji: '🍛', name: 'Lucknowi Biryani', restaurant: 'Dum Pukht', rating: '4.8', price: '₹399', time: '40-45 min' },
+        { emoji: '🍛', name: 'Kolkata Biryani', restaurant: 'Aminia', rating: '4.4', price: '₹249', time: '25-30 min' },
+        { emoji: '🍛', name: 'Chicken Biryani', restaurant: 'Biryani By Kilo', rating: '4.3', price: '₹329', time: '35-40 min' },
+      ];
+
+      // Adjust for other searches
+      if (msg.includes('pizza')) {
+        dishes.length = 0;
+        dishes.push(
+          { emoji: '🍕', name: 'Margherita Pizza', restaurant: 'Domino\'s', rating: '4.2', price: '₹199', time: '25-30 min' },
+          { emoji: '🍕', name: 'Farmhouse Pizza', restaurant: 'Pizza Hut', rating: '4.0', price: '₹349', time: '30-35 min' },
+          { emoji: '🍕', name: 'Pepperoni Pizza', restaurant: 'La Pino\'z', rating: '4.5', price: '₹299', time: '20-25 min' },
+        );
+      } else if (!msg.includes('biryani')) {
+        dishes.length = 0;
+        dishes.push(
+          { emoji: '🍽️', name: 'Butter Chicken', restaurant: 'Punjabi Angithi', rating: '4.5', price: '₹279', time: '30-35 min' },
+          { emoji: '🍜', name: 'Pad Thai Noodles', restaurant: 'Thai Express', rating: '4.3', price: '₹249', time: '20-25 min' },
+          { emoji: '🥘', name: 'Dal Makhani', restaurant: 'Haldiram\'s', rating: '4.4', price: '₹199', time: '15-20 min' },
+        );
+      }
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg msg-agent';
+      msgDiv.innerHTML = `
+        <strong>🔍 Cross-restaurant search results</strong>
+        <div class="search-results animate-in">
+          ${dishes.map((d, i) => `
+            <div class="search-item" onclick="addToCart('${d.name}', '${d.price}', '${d.restaurant}', ${i})" style="animation-delay:${i * 0.08}s">
+              <div class="dish-emoji">${d.emoji}</div>
+              <div class="dish-info">
+                <div class="dish-name">${d.name}</div>
+                <div class="dish-restaurant">${d.restaurant}</div>
+                <div class="dish-meta">
+                  <span class="rating">⭐ ${d.rating}</span>
+                  <span class="time">🕐 ${d.time}</span>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div class="dish-price">${d.price}</div>
+                <button class="action-btn primary" style="margin-top:6px;font-size:11px;padding:5px 12px" onclick="event.stopPropagation();addToCart('${d.name}','${d.price}','${d.restaurant}',${i})">Add to Cart</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      document.getElementById('messages').appendChild(msgDiv);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // COUPONS SCENARIO
+    // ═══════════════════════════════════════════════════════════════
+    function showCouponsCard() {
+      const coupons = [
+        { discount: '₹120 OFF', code: 'WELCOME120', desc: 'On your first order', min: 'Min order ₹299', expiry: 'Valid till 30 Jun' },
+        { discount: '40% OFF', code: 'SWIGGY40', desc: 'Up to ₹100 off on next 3 orders', min: 'Min order ₹199', expiry: 'Valid till 25 Jun' },
+        { discount: 'FREE DELIVERY', code: 'FREEDEL', desc: 'Free delivery on all orders', min: 'No minimum', expiry: 'Valid for 7 days' },
+        { discount: '₹75 OFF', code: 'BIRYANI75', desc: 'Flat ₹75 off on biryani orders', min: 'Min order ₹249', expiry: 'Expires today' },
+      ];
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg msg-agent';
+      msgDiv.innerHTML = `
+        <strong>🎟️ Available coupons for you</strong>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:8px">Found ${coupons.length} active coupons based on your order history</p>
+        ${coupons.map((c, i) => `
+          <div class="coupon-card animate-in" style="animation-delay:${i * 0.1}s">
+            <div class="coupon-top">
+              <span class="coupon-discount">${c.discount}</span>
+              <span class="coupon-code">${c.code}</span>
+            </div>
+            <div class="coupon-desc">${c.desc}</div>
+            <div class="coupon-meta">
+              <span>${c.min}</span>
+              <span>${c.expiry}</span>
+            </div>
+            <button class="action-btn" style="margin-top:8px;font-size:11px;padding:5px 12px" onclick="applyCoupon('${c.code}')">Apply Coupon</button>
+          </div>
+        `).join('')}
+      `;
+      document.getElementById('messages').appendChild(msgDiv);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    }
+
+    function applyCoupon(code) {
+      addMessage('user', `Apply coupon ${code}`);
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        addMessage('agent', `✅ Coupon <strong>${code}</strong> applied! Discount will be reflected at checkout. Valid on your next order.`);
+      }, 500);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CART FLOW
+    // ═══════════════════════════════════════════════════════════════
+    function addToCart(itemName, priceStr, restaurant, idx) {
+      // Parse price
+      const price = parseInt(priceStr.replace('₹', ''));
+      cartState.items.push({ name: itemName, price, restaurant, qty: 1 });
+      cartState.subtotal = cartState.items.reduce((sum, i) => sum + i.price * i.qty, 0);
+      cartState.total = cartState.subtotal + cartState.deliveryFee;
+
+      // Show "Adding to cart..." animation
+      addMessage('user', `Order ${itemName}`);
+      const loadingMsg = document.createElement('div');
+      loadingMsg.className = 'msg msg-agent';
+      loadingMsg.id = 'cart-loading';
+      loadingMsg.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px">
+          <span>Adding to cart</span>
+          <span class="loading-dots"><span></span><span></span><span></span></span>
+        </div>
+      `;
+      document.getElementById('messages').appendChild(loadingMsg);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+
+      setTimeout(() => {
+        const el = document.getElementById('cart-loading');
+        if (el) el.remove();
+        showCartConfirmation(itemName, priceStr, restaurant);
+      }, 1200);
+    }
+
+    function showCartConfirmation(itemName, priceStr, restaurant) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg msg-agent';
+
+      // Group items
+      const grouped = {};
+      cartState.items.forEach(i => {
+        if (grouped[i.name]) { grouped[i.name].qty++; }
+        else { grouped[i.name] = { ...i }; }
+      });
+
+      msgDiv.innerHTML = `
+        <strong>🛒 Your Cart</strong>
+        <div class="cart-card animate-in">
+          <div class="cart-card-header">
+            <span class="icon">🛍️</span>
+            <span class="title">${cartState.items.length} item${cartState.items.length > 1 ? 's' : ''} from ${restaurant}</span>
+          </div>
+          <div class="cart-card-body">
+            ${Object.values(grouped).map(i => `
+              <div class="cart-item">
+                <span class="name">${i.name} ${i.qty > 1 ? '×' + i.qty : ''}</span>
+                <span class="price">₹${i.price * i.qty}</span>
+              </div>
+            `).join('')}
+            <div class="cart-totals">
+              <div class="cart-total"><span>Subtotal</span><span>₹${cartState.subtotal}</span></div>
+              <div class="cart-total"><span>Delivery fee</span><span>₹${cartState.deliveryFee}</span></div>
+              <div class="cart-total grand"><span>Total</span><span>₹${cartState.total}</span></div>
+            </div>
+          </div>
+          <div class="cart-card-actions">
+            <button class="action-btn primary" onclick="confirmOrder()">Confirm Order</button>
+            <button class="action-btn" onclick="cancelOrder()">Cancel</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('messages').appendChild(msgDiv);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    }
+
+    function confirmOrder() {
+      showTyping();
+      setTimeout(() => {
+        hideTyping();
+        const orderId = 'FDNA-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'msg msg-agent';
+        msgDiv.innerHTML = `
+          <div class="order-success animate-in">
+            <div class="emoji">🎉</div>
+            <h4>Order Placed!</h4>
+            <p>Your food is being prepared and will arrive in 30-35 minutes</p>
+            <span class="tracking">📦 ${orderId}</span>
+          </div>
+        `;
+        document.getElementById('messages').appendChild(msgDiv);
+        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+
+        // Show Instamart cross-sell after a delay
+        if (!instamartShown) {
+          setTimeout(() => showInstamartSuggestion(), 1500);
+        }
+
+        // Reset cart
+        cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0 };
+        updateSuggestions('order');
+      }, 800);
+    }
+
+    function cancelOrder() {
+      cartState = { items: [], subtotal: 0, deliveryFee: 29, total: 0 };
+      addMessage('agent', 'Order cancelled. Your cart is now empty. Let me know if you want to try something else!');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // INSTAMART CROSS-SELL
+    // ═══════════════════════════════════════════════════════════════
+    function showInstamartSuggestion() {
+      instamartShown = true;
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg msg-agent';
+      msgDiv.innerHTML = `
+        <div class="instamart-suggest animate-in">
+          <div class="title">🛒 Add from Instamart?</div>
+          <span style="font-size:12px;color:var(--muted)">Since you're ordering, need anything from the store?</span>
+          <div class="instamart-items">
+            <button class="instamart-item" onclick="instamartAdd(this, '🥛 Milk', '₹56')">🥛 Milk (₹56)</button>
+            <button class="instamart-item" onclick="instamartAdd(this, '🍞 Bread', '₹45')">🍞 Bread (₹45)</button>
+            <button class="instamart-item" onclick="instamartAdd(this, '🥚 Eggs', '₹80')">🥚 Eggs (₹80)</button>
+            <button class="instamart-item" onclick="instamartAdd(this, '🧈 Butter', '₹55')">🧈 Butter (₹55)</button>
+            <button class="instamart-item" onclick="instamartAdd(this, '🍌 Bananas', '₹40')">🍌 Bananas (₹40)</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('messages').appendChild(msgDiv);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    }
+
+    function instamartAdd(btn, name, price) {
+      btn.style.borderColor = 'var(--forest)';
+      btn.style.color = 'var(--forest)';
+      btn.style.background = 'rgba(47,91,79,0.1)';
+      btn.textContent = '✓ Added';
+      btn.disabled = true;
+
+      // Show small confirmation
+      const confirmDiv = document.createElement('div');
+      confirmDiv.className = 'msg msg-system';
+      confirmDiv.textContent = `${name} added to your Instamart cart (${price})`;
+      document.getElementById('messages').appendChild(confirmDiv);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
     }
 
     function sendSuggestion(text) {
@@ -807,12 +1222,14 @@
     // SUGGESTIONS
     // ═══════════════════════════════════════════════════════════════
     const SUGGESTION_SETS = {
-      default: ['Order my usual', "It's Friday", 'Plan my evening', 'Something healthy', 'Surprise me'],
-      after_order: ['Order something else', 'Plan my evening', 'Something healthy'],
+      default: ['Order my usual', 'Find me the best biryani', 'Any coupons or deals?', "It's Friday", 'Plan my evening', 'Something healthy', 'Surprise me'],
+      after_order: ['Find me the best biryani', 'Any coupons or deals?', 'Plan my evening', 'Something healthy'],
       after_healthy: ['Order my usual', 'Surprise me', "It's Friday"],
       after_surprise: ['Order my usual', 'Something healthy', 'Plan my evening'],
       after_festival: ['Order my usual', 'Something healthy', 'Surprise me'],
       after_evening: ['Order my usual', 'Something healthy', 'Surprise me'],
+      after_search: ['Any coupons or deals?', 'Order my usual', 'Surprise me'],
+      after_coupon: ['Find me the best biryani', 'Order my usual', 'Surprise me'],
     };
 
     function updateSuggestions(lastMessage) {
@@ -823,6 +1240,8 @@
       else if (msg.includes('surprise') || msg.includes('different')) key = 'after_surprise';
       else if (msg.includes('diwali') || msg.includes('holi') || msg.includes('festival')) key = 'after_festival';
       else if (msg.includes('evening') || msg.includes('plan')) key = 'after_evening';
+      else if (msg.includes('find') || msg.includes('search') || msg.includes('best')) key = 'after_search';
+      else if (msg.includes('coupon') || msg.includes('deal') || msg.includes('offer')) key = 'after_coupon';
 
       const container = document.getElementById('suggestions');
       container.innerHTML = (SUGGESTION_SETS[key] || SUGGESTION_SETS.default).map(s =>

@@ -420,6 +420,52 @@
     .footer-links a:hover { color: var(--accent); }
 
     /* ═══════════════════════════════════════════════════════════════
+       SCROLL TO TOP
+       ═══════════════════════════════════════════════════════════════ */
+    .scroll-top {
+      position: fixed; bottom: 32px; right: 32px; z-index: 90;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--accent); color: #FFF; border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0; transform: translateY(20px);
+      transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(192,81,47,0.3);
+      pointer-events: none;
+    }
+    .scroll-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .scroll-top:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(192,81,47,0.4); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       DEMO PREVIEW ENHANCEMENTS
+       ═══════════════════════════════════════════════════════════════ */
+    .demo-preview-body { position: relative; }
+    .demo-preview-body::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 40px; background: linear-gradient(transparent, var(--surface));
+      pointer-events: none; z-index: 2;
+    }
+    .demo-preview-bar .demo-preview-fill {
+      animation: dnaBarPulse 2.5s ease-in-out infinite alternate;
+    }
+    .demo-preview-bar:nth-child(2) .demo-preview-fill { animation-delay: 0.3s; }
+    .demo-preview-bar:nth-child(3) .demo-preview-fill { animation-delay: 0.6s; }
+    @keyframes dnaBarPulse {
+      0% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+    .demo-preview-chat .typing-preview {
+      display: flex; gap: 4px; padding: 6px 0;
+    }
+    .demo-preview-chat .typing-preview span {
+      width: 5px; height: 5px; background: var(--muted-light); border-radius: 50%;
+      animation: previewBounce 1.4s infinite ease-in-out;
+    }
+    .demo-preview-chat .typing-preview span:nth-child(1) { animation-delay: -0.32s; }
+    .demo-preview-chat .typing-preview span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes previewBounce {
+      0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════════════════════════ */
     @media (max-width: 1024px) {
@@ -590,12 +636,15 @@
                 <div class="demo-preview-msg agent"><strong>Welcome, Priya!</strong><br>I know your food psychology.</div>
                 <div class="demo-preview-msg user">It's Friday</div>
                 <div class="demo-preview-msg agent">Friday celebration detected! Your habit loop suggests <strong>biryani</strong> — the routine that satisfies your weekend reward-seeking.</div>
+                <div class="typing-preview"><span></span><span></span><span></span></div>
               </div>
               <div class="demo-preview-dna">
                 <div class="demo-preview-dna-title">🧬 Food DNA</div>
                 <div class="demo-preview-bar"><div class="demo-preview-fill" style="width:85%;background:var(--dim-dietary)"></div></div>
                 <div class="demo-preview-bar"><div class="demo-preview-fill" style="width:65%;background:var(--dim-regional)"></div></div>
                 <div class="demo-preview-bar"><div class="demo-preview-fill" style="width:72%;background:var(--dim-habit)"></div></div>
+                <div class="demo-preview-bar"><div class="demo-preview-fill" style="width:55%;background:var(--dim-emotional)"></div></div>
+                <div class="demo-preview-bar"><div class="demo-preview-fill" style="width:40%;background:var(--dim-temporal)"></div></div>
               </div>
             </div>
           </div>
@@ -663,6 +712,11 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══ SCROLL TO TOP ═══ -->
+  <button class="scroll-top" id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+  </button>
 
   <!-- ═══ FOOTER ═══ -->
   <footer class="footer">
@@ -868,6 +922,14 @@
         }
       });
 
+      // Scroll-to-top button visibility
+      ScrollTrigger.create({
+        start: 'top -400',
+        onUpdate: (self) => {
+          document.getElementById('scroll-top').classList.toggle('visible', self.progress > 0);
+        }
+      });
+
       gsap.utils.toArray('.reveal').forEach((el, i) => {
         gsap.to(el, {
           opacity: 1, y: 0, duration: 0.8,
@@ -882,7 +944,8 @@
         gsap.to(el, {
           innerText: target, duration: 1.5, ease: 'power2.out',
           snap: { innerText: 1 },
-          scrollTrigger: { trigger: el, start: 'top 90%' }
+          scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none resume' },
+          delay: 0.5
         });
       });
 
